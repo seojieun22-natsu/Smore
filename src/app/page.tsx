@@ -7,7 +7,7 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-md border-b border-orange-100 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-3">
-          <span className="text-2xl">🔥</span>
+          <span className="text-2xl">🐱</span>
           <div>
             <h1 className="text-lg font-bold text-gray-800 tracking-tight">SMORE 매뉴얼</h1>
             <p className="text-xs text-orange-400">스모어 운영 가이드북</p>
@@ -21,7 +21,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-gray-800 mb-3">
             안녕하세요! SMORE 매뉴얼입니다 😊
           </h2>
-          <p className="text-gray-500 text-sm leading-relaxed max-w-md mx-auto">
+          <p className="text-gray-500 text-sm leading-relaxed">
             운영, 상품, 클레임 등 업무에 필요한 모든 매뉴얼을 한 곳에서 확인하세요.
           </p>
         </div>

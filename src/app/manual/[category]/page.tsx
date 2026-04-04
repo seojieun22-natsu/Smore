@@ -17,7 +17,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     <div className="min-h-screen bg-gradient-to-b from-[#FFF8F0] to-[#FFF1E6]">
       <header className="bg-white/90 backdrop-blur-md border-b border-orange-100 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-3">
-          <Link href="/" className="text-2xl hover:scale-110 transition-transform">🔥</Link>
+          <Link href="/" className="text-2xl hover:scale-110 transition-transform">🐱</Link>
           <div>
             <h1 className="text-lg font-bold text-gray-800 tracking-tight">SMORE 매뉴얼</h1>
             <p className="text-xs text-orange-400">스모어 운영 가이드북</p>
