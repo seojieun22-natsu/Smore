@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { categories, getPagesByCategory } from '@/lib/content';
+import { claims } from '@/data/claims';
 import { notFound } from 'next/navigation';
 
 export function generateStaticParams() {
@@ -60,6 +61,18 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                 )}
               </Link>
             ))}
+
+            {category === 'claims' && (
+              <Link
+                href="/claims"
+                className="block bg-white rounded-xl border border-orange-50 p-6 hover:shadow-md hover:border-orange-200 hover:-translate-y-0.5 transition-all duration-200 group"
+              >
+                <h3 className="font-semibold text-gray-800 group-hover:text-orange-600 transition-colors mb-1">
+                  🛡️ 클레임 대응 가이드
+                </h3>
+                <p className="text-sm text-gray-500">과거 클레임 {claims.length}건 케이스 · 유형별 검색 · 접수 양식</p>
+              </Link>
+            )}
           </div>
         )}
       </section>
