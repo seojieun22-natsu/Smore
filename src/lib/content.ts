@@ -64,7 +64,7 @@ export async function getPageContent(category: string, slug: string): Promise<Ma
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data, content } = matter(fileContent);
   
-  const processedContent = await remark().use(html).process(content);
+  const processedContent = await remark().use(html, { sanitize: false }).process(content);
   
   return {
     slug,

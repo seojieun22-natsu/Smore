@@ -1,2 +1,58 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+/* 아코디언 (details/summary) 스타일 */
+details {
+  margin: 1.5rem 0;
+  border: 1px solid #f3e8d8;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fffef7;
+}
+
+details summary {
+  padding: 16px 20px;
+  cursor: pointer;
+  background: linear-gradient(to right, #fff8f0, #fffef7);
+  border-bottom: 1px solid #f3e8d8;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  transition: background 0.2s;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: '▶';
+  font-size: 10px;
+  color: #f97316;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details summary:hover {
+  background: #fff1e6;
+}
+
+details[open] summary {
+  border-bottom: 1px solid #f3e8d8;
+}
+
+details > *:not(summary) {
+  padding: 0 20px;
+}
+
+details img {
+  border-radius: 8px;
+  margin: 12px 0;
+  max-width: 100%;
+  border: 1px solid #eee;
+}
