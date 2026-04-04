@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SMORE 매뉴얼 🐿️",
+  title: "SMORE 매뉴얼",
   description: "스모어 운영 가이드북 — 운영, 상품, 클레임 매뉴얼",
 };
 

@@ -3,49 +3,51 @@ import { categories, getPagesByCategory } from '@/lib/content';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50">
+    <div className="min-h-screen bg-gradient-to-b from-[#FFF8F0] to-[#FFF1E6]">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-amber-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-3">
-          <span className="text-3xl">🐿️</span>
+      <header className="bg-white/90 backdrop-blur-md border-b border-orange-100 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-3">
+          <span className="text-2xl">🔥</span>
           <div>
-            <h1 className="text-xl font-bold text-amber-900">SMORE 매뉴얼</h1>
-            <p className="text-sm text-amber-600">스모어 운영 가이드북</p>
+            <h1 className="text-lg font-bold text-gray-800 tracking-tight">SMORE 매뉴얼</h1>
+            <p className="text-xs text-orange-400">스모어 운영 가이드북</p>
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-6 py-12">
-        <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-8 mb-8">
-          <h2 className="text-2xl font-bold text-amber-900 mb-2">
-            안녕하세요! SMORE 매뉴얼입니다 🌰
+      <section className="max-w-4xl mx-auto px-6 pt-12 pb-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-10 mb-10 text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">
+            안녕하세요! SMORE 매뉴얼입니다 😊
           </h2>
-          <p className="text-amber-700">
+          <p className="text-gray-500 text-sm leading-relaxed max-w-md mx-auto">
             운영, 상품, 클레임 등 업무에 필요한 모든 매뉴얼을 한 곳에서 확인하세요.
           </p>
         </div>
 
         {/* Category Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {categories.map(category => {
             const pages = getPagesByCategory(category.id);
             return (
               <Link
                 key={category.id}
                 href={`/manual/${category.id}`}
-                className="bg-white rounded-xl shadow-sm border border-amber-100 p-6 hover:shadow-md hover:border-amber-300 transition-all group"
+                className="bg-white rounded-2xl shadow-sm border border-orange-50 p-7 hover:shadow-lg hover:border-orange-200 hover:-translate-y-0.5 transition-all duration-200 group"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-3xl">{category.emoji}</span>
-                  <div>
-                    <h3 className="text-lg font-semibold text-amber-900 group-hover:text-amber-700">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-2xl group-hover:bg-orange-100 transition-colors">
+                    {category.emoji}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-base font-semibold text-gray-800 group-hover:text-orange-600 transition-colors">
                       {category.name}
                     </h3>
-                    <p className="text-sm text-amber-500">{pages.length}개 문서</p>
+                    <p className="text-xs text-orange-400 mb-2">{pages.length}개 문서</p>
+                    <p className="text-sm text-gray-500 leading-relaxed">{category.description}</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">{category.description}</p>
               </Link>
             );
           })}
@@ -53,8 +55,10 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="max-w-5xl mx-auto px-6 py-8 text-center text-sm text-amber-400">
-        <p>🐿️ 쩨홉이 관리하는 SMORE 매뉴얼 · {new Date().getFullYear()}</p>
+      <footer className="max-w-4xl mx-auto px-6 py-10 text-center">
+        <div className="border-t border-orange-100 pt-6">
+          <p className="text-xs text-gray-300">SMORE 매뉴얼 · {new Date().getFullYear()}</p>
+        </div>
       </footer>
     </div>
   );
