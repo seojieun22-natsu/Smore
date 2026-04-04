@@ -26,7 +26,8 @@ export interface Category {
 
 export const categories: Category[] = [
   { id: 'operations', name: '운영 매뉴얼', emoji: '🏪', description: '매장 운영 가이드 및 절차' },
-  { id: 'products', name: '상품 매뉴얼', emoji: '📦', description: '상품군별 특이사항 및 취급 기준' },
+  // products는 별도 /products 페이지에서 관리
+  // { id: 'products', name: '상품 매뉴얼', emoji: '📦', description: '상품군별 특이사항 및 취급 기준' },
   { id: 'claims', name: '클레임 매뉴얼', emoji: '🚨', description: '클레임 대응 프로세스 및 FAQ' },
   { id: 'guides', name: '업무 가이드', emoji: '📋', description: '이카운트, 시스템 사용법 등' },
 ];
