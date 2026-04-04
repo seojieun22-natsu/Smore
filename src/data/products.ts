@@ -16,12 +16,12 @@ export interface ProductGroup {
 }
 
 export const productGroups: ProductGroup[] = [
-  { id: 'figure', name: '피규어/토이', emoji: '🧸', description: '피규어, 인형, 토이 상품군' },
-  { id: 'stationery', name: '문구류', emoji: '✏️', description: '노트, 펜, 스티커 등 문구 상품군' },
-  { id: 'accessory', name: '액세서리/키링', emoji: '🔑', description: '키링, 키캡, 액세서리 상품군' },
-  { id: 'living', name: '리빙/잡화', emoji: '🏠', description: '머그컵, 쿠션, 생활용품 상품군' },
-  { id: 'food', name: '식품/캔디', emoji: '🍬', description: '캔디, 젤리, 식품류 상품군' },
-  { id: 'camera', name: '카메라/전자', emoji: '📷', description: '토이카메라, 전자제품 상품군' },
+  { id: 'figure', name: '피규어/토이', emoji: '🧸', description: '피규어, 인형, 블라인드박스 등 토이 상품' },
+  { id: 'stationery', name: '문구/스티커', emoji: '✏️', description: '노트, 펜, 스티커, 마스킹테이프 등' },
+  { id: 'accessory', name: '액세서리/키링', emoji: '🔑', description: '키링, 키캡, 뱃지, 밴드 등 액세서리' },
+  { id: 'living', name: '리빙/잡화', emoji: '🏠', description: '머그컵, 쿠션, 파우치, 담요 등 생활용품' },
+  { id: 'bag', name: '가방/파우치', emoji: '👜', description: '파우치, 크로스백, 에코백 등' },
+  { id: 'apparel', name: '의류/패션', emoji: '👕', description: '티셔츠, 양말, 모자, 잠옷 등 의류' },
 ];
 
 // 예시 데이터 — 나츠가 실제 데이터로 교체!
