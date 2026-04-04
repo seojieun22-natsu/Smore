@@ -21,7 +21,7 @@ export const productGroups: ProductGroup[] = [
   { id: 'accessory', name: '액세서리/키링', emoji: '🔑', description: '키링, 키캡, 뱃지, 밴드 등 액세서리' },
   { id: 'living', name: '리빙/잡화', emoji: '🏠', description: '머그컵, 쿠션, 파우치, 담요 등 생활용품' },
   { id: 'bag', name: '가방/파우치', emoji: '👜', description: '파우치, 크로스백, 에코백 등' },
-  { id: 'apparel', name: '의류/패션', emoji: '👕', description: '티셔츠, 양말, 모자, 잠옷 등 의류' },
+  { id: 'camera', name: '카메라/전자', emoji: '📷', description: '토이카메라, 전자제품 등' },
 ];
 
 // 예시 데이터 — 나츠가 실제 데이터로 교체!
