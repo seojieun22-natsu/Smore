@@ -290,5 +290,31 @@ updatedAt: "2026-04-04"
 
 ---
 
+---
+
+## 🖼️ 빠른 참고 카드
+
+> 프린트해서 카운터에 붙여두면 좋아요!
+
+### 오픈 체크리스트
+![오픈 체크리스트](/images/cards/open-checklist.png)
+
+### 마감 체크리스트
+![마감 체크리스트](/images/cards/close-checklist.png)
+
+### 결제 가이드
+![결제 가이드](/images/cards/payment-guide.png)
+
+### 환불 & 교환
+![환불 교환 가이드](/images/cards/refund-guide.png)
+
+### 불량 처리
+![불량 처리 가이드](/images/cards/defect-guide.png)
+
+### 퇴근 브리핑 양식
+![퇴근 브리핑 양식](/images/cards/briefing-template.png)
+
+---
+
 > 📌 이 매뉴얼은 팝업스토어 공통 가이드입니다.
 > 각 팝업별 세부사항(위치, 운영시간, 긴급연락처 등)은 별도 안내됩니다.
