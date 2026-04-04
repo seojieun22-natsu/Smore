@@ -44,6 +44,23 @@ export default async function GroupPage({ params }: { params: Promise<{ group: s
           </div>
         </div>
 
+        {/* 상품군 판매 주의사항 */}
+        {grp.notices && grp.notices.length > 0 && (
+          <div className="bg-orange-50/70 rounded-2xl border border-orange-100 p-6 mb-6">
+            <h3 className="text-sm font-semibold text-orange-700 mb-3 flex items-center gap-2">
+              <span>⚠️</span> 판매 시 주의사항
+            </h3>
+            <ul className="space-y-2">
+              {grp.notices.map((notice, i) => (
+                <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                  <span className="text-orange-400 mt-0.5 shrink-0">•</span>
+                  <span>{notice}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {products.length === 0 ? (
           <div className="bg-white rounded-2xl border border-orange-100 p-10 text-center">
             <p className="text-gray-400">이 상품군에 등록된 상품이 없어요 📝</p>

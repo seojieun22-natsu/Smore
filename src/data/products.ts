@@ -13,15 +13,61 @@ export interface ProductGroup {
   name: string;
   emoji: string;
   description: string;
+  notices?: string[];  // 상품군별 판매 주의사항/안내사항
 }
 
 export const productGroups: ProductGroup[] = [
-  { id: 'figure', name: '피규어/토이', emoji: '🧸', description: '피규어, 인형, 블라인드박스 등 토이 상품' },
-  { id: 'stationery', name: '문구/스티커', emoji: '✏️', description: '노트, 펜, 스티커, 마스킹테이프 등' },
-  { id: 'accessory', name: '액세서리/키링', emoji: '🔑', description: '키링, 키캡, 뱃지, 밴드 등 액세서리' },
-  { id: 'living', name: '리빙/잡화', emoji: '🏠', description: '머그컵, 쿠션, 파우치, 담요 등 생활용품' },
-  { id: 'bag', name: '가방/파우치', emoji: '👜', description: '파우치, 크로스백, 에코백 등' },
-  { id: 'camera', name: '카메라/전자', emoji: '📷', description: '토이카메라, 전자제품 등' },
+  {
+    id: 'figure', name: '피규어/토이', emoji: '🧸',
+    description: '피규어, 인형, 블라인드박스 등 토이 상품',
+    notices: [
+      '랜덤상품 판매 시, 중복 캐릭터가 나올 수 있으며 개봉 시 환불 불가',
+      '불량으로 인한 교환 시 동일 캐릭터로 교환 불가 (랜덤 특성상)',
+      '소형 부품 포함 — 3세 미만 어린이 사용 금지 안내 필수',
+      '도색 벗겨짐 주의 — 전시 시 직접 만지지 않도록 안내',
+    ],
+  },
+  {
+    id: 'stationery', name: '문구/스티커', emoji: '✏️',
+    description: '노트, 펜, 스티커, 마스킹테이프 등',
+    notices: [
+      '방수 제품 여부 확인 후 고객 안내 (대부분 방수 아님)',
+      '스티커류 직사광선 장시간 노출 시 변색 가능',
+    ],
+  },
+  {
+    id: 'accessory', name: '액세서리/키링', emoji: '🔑',
+    description: '키링, 키캡, 뱃지, 밴드 등 액세서리',
+    notices: [
+      '랜덤 구성 상품은 중복 가능성 안내 필수',
+      '금속 소재 상품은 수분/땀 접촉 시 변색 가능 안내',
+    ],
+  },
+  {
+    id: 'living', name: '리빙/잡화', emoji: '🏠',
+    description: '머그컵, 쿠션, 파우치, 담요 등 생활용품',
+    notices: [
+      '머그컵 — 전자레인지/식기세척기 사용 가능 여부 상품별 확인 필수',
+      '쿠션/담요 — 세탁 방법 안내 (손세탁 권장 등)',
+    ],
+  },
+  {
+    id: 'bag', name: '가방/파우치', emoji: '👜',
+    description: '파우치, 크로스백, 에코백 등',
+    notices: [
+      '색상 차이 가능 — 모니터와 실물 색상 차이 안내',
+      '원단 특성상 불량이 아닌 미세한 실밥 있을 수 있음 안내',
+    ],
+  },
+  {
+    id: 'camera', name: '카메라/전자', emoji: '📷',
+    description: '토이카메라, 전자제품 등',
+    notices: [
+      '충격에 약함 — 배송 시 에어캡 2중 포장 필수',
+      '배터리 미포함 상품 여부 확인 후 고객 안내',
+      '전자제품 특성상 개봉 후 단순 변심 환불 불가',
+    ],
+  },
 ];
 
 // 예시 데이터 — 나츠가 실제 데이터로 교체!
