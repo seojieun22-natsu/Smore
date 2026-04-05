@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 
 // 체크리스트 데이터: 각 항목에 D-day 기준 마감일
 interface CheckItem {
@@ -188,10 +188,54 @@ function getDeadlineBadge(daysLeft: number): string | null {
   return null;
 }
 
+// localStorage 키
+const STORAGE_KEY = 'smore-popup-checklist';
+
+interface SavedState {
+  openDateStr: string;
+  checkedItems: string[];
+  popupName: string;
+}
+
+function loadState(): SavedState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 export default function PopupChecklist() {
   const [openDateStr, setOpenDateStr] = useState('');
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [popupName, setPopupName] = useState('');
+  const [loaded, setLoaded] = useState(false);
+
+  // 초기 로드
+  useEffect(() => {
+    const saved = loadState();
+    if (saved) {
+      setOpenDateStr(saved.openDateStr || '');
+      setCheckedItems(new Set(saved.checkedItems || []));
+      setPopupName(saved.popupName || '');
+    }
+    setLoaded(true);
+  }, []);
+
+  // 변경 시 저장
+  const saveState = useCallback((date: string, checked: Set<string>, name: string) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        openDateStr: date,
+        checkedItems: Array.from(checked),
+        popupName: name,
+      }));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (loaded) saveState(openDateStr, checkedItems, popupName);
+  }, [openDateStr, checkedItems, popupName, loaded, saveState]);
 
   const openDate = useMemo(() => {
     if (!openDateStr) return null;
@@ -251,6 +295,22 @@ export default function PopupChecklist() {
 
           {openDate && (
             <div className="mt-3 flex items-center gap-3">
+              <button
+                onClick={() => {
+                  if (confirm('🗑️ 체크리스트를 초기화할까요?')) {
+                    setOpenDateStr(''); setCheckedItems(new Set()); setPopupName('');
+                    localStorage.removeItem(STORAGE_KEY);
+                  }
+                }}
+                className="text-xs text-red-400 hover:text-red-600 transition"
+              >
+                초기화
+              </button>
+            </div>
+          )}
+
+          {openDate && (
+            <div className="mt-2 flex items-center gap-3">
               <div className="flex-1 bg-gray-200 rounded-full h-2.5">
                 <div
                   className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
