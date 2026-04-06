@@ -6,6 +6,7 @@ export interface Product {
   brand?: string;
   notes: string[];
   tags?: string[];
+  images?: { src: string; alt: string }[];
 }
 
 export interface ProductGroup {
@@ -46,6 +47,7 @@ export const productGroups: ProductGroup[] = [
       '개봉 직후 파츠가 없었던 경우에만 교환 가능',
       '금속 소재 상품은 수분/땀 접촉 시 변색 가능 안내',
       '워치 스트랩은 갤럭시/애플 구분 및 바코드 확인 필수',
+      '2way 탈부착형 상품은 구조상 캐릭터 파츠가 분리될 수 있음 — 분리만으로는 환불 불가 안내',
     ],
   },
   {
@@ -120,33 +122,22 @@ export const products: Product[] = [
     group: 'figure',
     brand: '픽사',
     notes: [
-      '투명 플라스틱 박스에 봉투째 1개씩 넣어 판매 — 패키지 손상 방지',
+      '개봉 직후 파손 시 교환 가능',
     ],
     tags: ['픽사', '미니피규어', '랜덤'],
   },
   {
-    id: 'led-plush',
-    name: 'LED 인형 (모자 LED 포함)',
+    id: 'toy-story-keyring',
+    name: '토이스토리 키링',
+    barcode: '8809544694247',
     group: 'figure',
-    brand: '디즈니',
+    brand: '디즈니/픽사',
     notes: [
-      '모자 안 버튼 꾹 눌러야 LED 작동',
-      '작동 안 되는 제품 있으므로 판매 전 반드시 확인',
+      '도색 미세 번짐은 제조 공정 특성일 수 있음 — 심한 경우만 교환 검토',
     ],
-    tags: ['LED', '인형', '모자'],
+    tags: ['토이스토리', '키링'],
   },
   // 문구/스티커
-  {
-    id: 'figure-3color-pen',
-    name: '디즈니 피규어 3색볼펜',
-    barcode: '8809544694247',
-    group: 'stationery',
-    brand: '디즈니',
-    notes: [
-      '봉투(비닐) 특히 약함 — 손님 구경 중 뜯어짐 빈번',
-    ],
-    tags: ['디즈니', '3색볼펜', '피규어볼펜', '문구'],
-  },
   {
     id: 'deco-sticker-toystory',
     name: '토이스토리 데코스티커',
@@ -159,15 +150,100 @@ export const products: Product[] = [
   },
   // 액세서리/키링
   {
-    id: 'magsafe-popsicle',
+    id: 'magsafe-silicone-griptok-nick',
+    name: '맥세이프 실리콘 그립톡 닉',
+    barcode: '8800307173696',
+    group: 'accessory',
+    brand: '스토리너스',
+    notes: [
+      '2way 사용을 위한 탈부착형 상품 — 캐릭터 부분 분리는 정상 구조로 환불 사유 아님',
+      '캐릭터 파츠가 분리된 상태라도 재장착 가능 여부 먼저 안내',
+    ],
+    tags: ['맥세이프', '그립톡', '닉', '스토리너스'],
+    images: [
+      { src: '/images/products/storynus-griptok/storynus-griptok-detach.png', alt: '2way 탈부착 구조 – 캐릭터 파츠를 그립톡 본체에서 간편하게 분리하는 모습' },
+      { src: '/images/products/storynus-griptok/storynus-griptok-attach.png', alt: '2way 탈부착 – 캐릭터 파츠를 스마트폰 그립톡에 간편하게 장착하는 예시' },
+    ],
+  },
+  {
+    id: 'magsafe-silicone-griptok-judy',
+    name: '맥세이프 실리콘 그립톡 주디',
+    barcode: '8800307173689',
+    group: 'accessory',
+    brand: '스토리너스',
+    notes: [
+      '2way 사용을 위한 탈부착형 상품 — 캐릭터 부분 분리는 정상 구조로 환불 사유 아님',
+      '캐릭터 파츠가 분리된 상태라도 재장착 가능 여부 먼저 안내',
+    ],
+    tags: ['맥세이프', '그립톡', '주디', '스토리너스'],
+    images: [
+      { src: '/images/products/storynus-griptok/storynus-griptok-detach.png', alt: '2way 탈부착 구조 – 캐릭터 파츠를 그립톡 본체에서 간편하게 분리하는 모습' },
+      { src: '/images/products/storynus-griptok/storynus-griptok-attach.png', alt: '2way 탈부착 – 캐릭터 파츠를 스마트폰 그립톡에 간편하게 장착하는 예시' },
+    ],
+  },
+  {
+    id: 'magsafe-silicone-griptok-judy-hat',
+    name: '맥세이프 실리콘 그립톡 주디모자',
+    barcode: '8800358673619',
+    group: 'accessory',
+    brand: '스토리너스',
+    notes: [
+      '2way 사용을 위한 탈부착형 상품 — 캐릭터 부분 분리는 정상 구조로 환불 사유 아님',
+      '캐릭터 파츠가 분리된 상태라도 재장착 가능 여부 먼저 안내',
+    ],
+    tags: ['맥세이프', '그립톡', '주디모자', '스토리너스'],
+    images: [
+      { src: '/images/products/storynus-griptok/storynus-griptok-detach.png', alt: '2way 탈부착 구조 – 캐릭터 파츠를 그립톡 본체에서 간편하게 분리하는 모습' },
+      { src: '/images/products/storynus-griptok/storynus-griptok-attach.png', alt: '2way 탈부착 – 캐릭터 파츠를 스마트폰 그립톡에 간편하게 장착하는 예시' },
+    ],
+  },
+  {
+    id: 'magsafe-silicone-griptok-popsicle',
     name: '맥세이프 실리콘 그립톡 팝시클',
     barcode: '8800358673602',
     group: 'accessory',
     brand: '스토리너스',
     notes: [
       '초반에 뻑뻑함 — 사용하면 점차 부드러워짐 안내',
+      '2way 사용을 위한 탈부착형 상품 — 캐릭터 부분 분리는 정상 구조로 환불 사유 아님',
     ],
-    tags: ['맥세이프', '그립톡', '팝시클'],
+    tags: ['맥세이프', '그립톡', '팝시클', '스토리너스'],
+    images: [
+      { src: '/images/products/storynus-griptok/storynus-griptok-detach.png', alt: '2way 탈부착 구조 – 캐릭터 파츠를 그립톡 본체에서 간편하게 분리하는 모습' },
+      { src: '/images/products/storynus-griptok/storynus-griptok-attach.png', alt: '2way 탈부착 – 캐릭터 파츠를 스마트폰 그립톡에 간편하게 장착하는 예시' },
+    ],
+  },
+  {
+    id: 'poptok-plus-nick',
+    name: '팝톡플러스 닉',
+    barcode: '8809808397761',
+    group: 'accessory',
+    brand: '스토리너스',
+    notes: [
+      '2way 사용을 위한 탈부착형 상품 — 캐릭터 부분 분리는 정상 구조로 환불 사유 아님',
+      '캐릭터 파츠가 분리된 상태라도 재장착 가능 여부 먼저 안내',
+    ],
+    tags: ['팝톡플러스', '닉', '스토리너스'],
+    images: [
+      { src: '/images/products/storynus-griptok/storynus-griptok-detach.png', alt: '2way 탈부착 구조 – 캐릭터 파츠를 그립톡 본체에서 간편하게 분리하는 모습' },
+      { src: '/images/products/storynus-griptok/storynus-griptok-attach.png', alt: '2way 탈부착 – 캐릭터 파츠를 스마트폰 그립톡에 간편하게 장착하는 예시' },
+    ],
+  },
+  {
+    id: 'poptok-plus-judy',
+    name: '팝톡플러스 주디',
+    barcode: '8809808397754',
+    group: 'accessory',
+    brand: '스토리너스',
+    notes: [
+      '2way 사용을 위한 탈부착형 상품 — 캐릭터 부분 분리는 정상 구조로 환불 사유 아님',
+      '캐릭터 파츠가 분리된 상태라도 재장착 가능 여부 먼저 안내',
+    ],
+    tags: ['팝톡플러스', '주디', '스토리너스'],
+    images: [
+      { src: '/images/products/storynus-griptok/storynus-griptok-detach.png', alt: '2way 탈부착 구조 – 캐릭터 파츠를 그립톡 본체에서 간편하게 분리하는 모습' },
+      { src: '/images/products/storynus-griptok/storynus-griptok-attach.png', alt: '2way 탈부착 – 캐릭터 파츠를 스마트폰 그립톡에 간편하게 장착하는 예시' },
+    ],
   },
   // 카메라/전자
   {
@@ -237,43 +313,19 @@ export const products: Product[] = [
       '박스 자체가 배경이 되는 DIY 제품',
       '박스 옆 절취선 제거 후 조립',
     ],
-    tags: ['DIY', '피규어', '랏소', '알린', '피자플래닛'],
-  },
-  {
-    id: 'diy-padding-watch',
-    name: 'DIY 패딩시계',
-    group: 'accessory',
-    brand: '픽사',
-    notes: [
-      '시계바늘 구멍이 타이트하게 제작됨',
-      '시계바늘을 뒤집어 기둥에 1~2번 눌러 구멍 확대 후 원상태로 장착',
-      '과도한 힘 사용 시 구부러짐 발생 가능',
-    ],
-    tags: ['DIY', '패딩시계', '시계'],
-  },
-  // 퍼즐
-  {
-    id: 'puzzle-general',
-    name: '퍼즐 상품 (전체)',
-    group: 'living',
-    brand: '비엔비 퍼즐',
-    notes: [
-      '측면 사이즈 표기 확인 후 안내',
-      '아크릴 케이스 포함 제품 — 퍼즐/큐브 파손 주의',
-      '피스 분실 시 상품 내 동봉 엽서 활용, 엽서 분실 시 보상 불가',
-    ],
-    tags: ['퍼즐', '직소퍼즐', '큐브', '미니큐브'],
+    tags: ['DIY', '피규어', '토이스토리'],
   },
 ];
 
 export function searchProducts(query: string): Product[] {
   const q = query.toLowerCase().trim();
   if (!q) return [];
+
   return products.filter(p =>
     p.name.toLowerCase().includes(q) ||
     p.barcode?.includes(q) ||
     p.brand?.toLowerCase().includes(q) ||
-    p.tags?.some(t => t.toLowerCase().includes(q))
+    p.tags?.some(tag => tag.toLowerCase().includes(q))
   );
 }
 

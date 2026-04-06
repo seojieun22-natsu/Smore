@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { searchProducts, Product } from '@/data/products';
 
@@ -21,7 +22,6 @@ export default function ProductSearch() {
 
   return (
     <div>
-      {/* Search Input */}
       <div className="relative">
         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
           <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,7 +37,6 @@ export default function ProductSearch() {
         />
       </div>
 
-      {/* Search Results */}
       {hasSearched && (
         <div className="mt-4">
           {results.length === 0 ? (
@@ -65,7 +64,7 @@ function ProductCard({ product }: { product: Product }) {
       <div className="px-5 py-4 border-b border-orange-50 flex items-start justify-between">
         <div>
           <h4 className="font-semibold text-gray-800 text-sm">{product.name}</h4>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex items-center gap-3 mt-1 flex-wrap">
             {product.barcode && (
               <span className="text-xs text-gray-400 font-mono">{product.barcode}</span>
             )}
@@ -76,6 +75,21 @@ function ProductCard({ product }: { product: Product }) {
         </div>
       </div>
       <div className="px-5 py-4">
+        {product.images && product.images.length > 0 && (
+          <div className="flex gap-3 mb-4 flex-wrap">
+            {product.images.map((image) => (
+              <div key={image.src} className="rounded-xl border border-orange-100 bg-orange-50/40 p-2">
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  width={96}
+                  height={96}
+                  className="rounded-lg object-cover w-24 h-24"
+                />
+              </div>
+            ))}
+          </div>
+        )}
         <p className="text-xs font-medium text-gray-400 mb-2">⚠️ 유의사항</p>
         <ul className="space-y-2">
           {product.notes.map((note, i) => (

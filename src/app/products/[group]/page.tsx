@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { productGroups, getProductsByGroup } from '@/data/products';
 import { notFound } from 'next/navigation';
 
@@ -44,7 +45,6 @@ export default async function GroupPage({ params }: { params: Promise<{ group: s
           </div>
         </div>
 
-        {/* 상품군 판매 주의사항 */}
         {grp.notices && grp.notices.length > 0 && (
           <div className="bg-orange-50/70 rounded-2xl border border-orange-100 p-6 mb-6">
             <h3 className="text-sm font-semibold text-orange-700 mb-3 flex items-center gap-2">
@@ -72,7 +72,7 @@ export default async function GroupPage({ params }: { params: Promise<{ group: s
                 <div className="px-5 py-4 border-b border-orange-50 flex items-start justify-between">
                   <div>
                     <h4 className="font-semibold text-gray-800 text-sm">{product.name}</h4>
-                    <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
                       {product.barcode && (
                         <span className="text-xs text-gray-400 font-mono">{product.barcode}</span>
                       )}
@@ -83,6 +83,21 @@ export default async function GroupPage({ params }: { params: Promise<{ group: s
                   </div>
                 </div>
                 <div className="px-5 py-4">
+                  {product.images && product.images.length > 0 && (
+                    <div className="flex gap-3 mb-4 flex-wrap">
+                      {product.images.map((image) => (
+                        <div key={image.src} className="rounded-xl border border-orange-100 bg-orange-50/40 p-2">
+                          <Image
+                            src={image.src}
+                            alt={image.alt}
+                            width={110}
+                            height={110}
+                            className="rounded-lg object-cover w-[110px] h-[110px]"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <p className="text-xs font-medium text-gray-400 mb-2">⚠️ 유의사항</p>
                   <ul className="space-y-2">
                     {product.notes.map((note, i) => (
