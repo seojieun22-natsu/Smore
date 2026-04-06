@@ -332,14 +332,37 @@ export const products: Product[] = [
     tags: ['리유저블', '콜드컵', '인사이드아웃', '온도변화'],
   },
   {
-    id: 'tumbler',
-    name: '주토피아 텀블러',
+    id: 'zootopia-tumbler-carrot',
+    name: '주토피아 텀블러 당근',
+    barcode: '8809923819797',
     group: 'living',
     brand: '디즈니/픽사',
     notes: [
       '뚜껑 파손(분리) 불량 사례 있음 — 고정 안 되면 교환 처리',
     ],
-    tags: ['텀블러', '주토피아'],
+    tags: ['텀블러', '주토피아', '당근'],
+  },
+  {
+    id: 'zootopia-tumbler-cotton-candy',
+    name: '주토피아 텀블러 솜사탕',
+    barcode: '8809923819803',
+    group: 'living',
+    brand: '디즈니/픽사',
+    notes: [
+      '뚜껑 파손(분리) 불량 사례 있음 — 고정 안 되면 교환 처리',
+    ],
+    tags: ['텀블러', '주토피아', '솜사탕'],
+  },
+  {
+    id: 'zootopia-tumbler-car',
+    name: '주토피아 텀블러 자동차',
+    barcode: '8809923819810',
+    group: 'living',
+    brand: '디즈니/픽사',
+    notes: [
+      '뚜껑 파손(분리) 불량 사례 있음 — 고정 안 되면 교환 처리',
+    ],
+    tags: ['텀블러', '주토피아', '자동차'],
   },
   // DIY 제품
   {
