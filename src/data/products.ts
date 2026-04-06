@@ -308,15 +308,28 @@ export const products: Product[] = [
     tags: ['디즈니', '머그컵', '블랙'],
   },
   {
-    id: 'reusable-cup',
-    name: '리유저블 컵',
+    id: 'insideout2-reusable-cold-cup',
+    name: '인사이드아웃2 리유저블 콜드컵',
+    barcode: '8809923814792',
     group: 'living',
     brand: '디즈니',
     notes: [
       '온도 변화 제품 — 찬물 넣으면 패턴 나타남',
       '파츠(미키 귀 등) 떨어짐 주의 — 틈새로 빠질 수 있음',
     ],
-    tags: ['리유저블', '컵', '온도변화'],
+    tags: ['리유저블', '콜드컵', '인사이드아웃2', '온도변화'],
+  },
+  {
+    id: 'insideout-reusable-cold-cup',
+    name: '인사이드아웃 리유저블 콜드컵',
+    barcode: '8809923814785',
+    group: 'living',
+    brand: '디즈니',
+    notes: [
+      '온도 변화 제품 — 찬물 넣으면 패턴 나타남',
+      '파츠(미키 귀 등) 떨어짐 주의 — 틈새로 빠질 수 있음',
+    ],
+    tags: ['리유저블', '콜드컵', '인사이드아웃', '온도변화'],
   },
   {
     id: 'tumbler',
