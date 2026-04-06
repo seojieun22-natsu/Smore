@@ -277,12 +277,35 @@ export const products: Product[] = [
   {
     id: 'retro-cup-set',
     name: '미키마우스 레트로컵세트',
+    barcode: '8809656252236',
+    group: 'living',
+    brand: '디즈니',
+    notes: [
+      '식기세척기·전자레인지는 모두 사용 불가능',
+    ],
+    tags: ['미키', '레트로', '컵'],
+  },
+  {
+    id: 'disney-mug-navy',
+    name: '디즈니 머그컵 네이비',
+    barcode: '8809923816147',
     group: 'living',
     brand: '디즈니',
     notes: [
       '식기세척기·전자레인지 모두 사용 가능',
     ],
-    tags: ['미키', '레트로', '컵'],
+    tags: ['디즈니', '머그컵', '네이비'],
+  },
+  {
+    id: 'disney-mug-black',
+    name: '디즈니 머그컵 블랙',
+    barcode: '8809923816130',
+    group: 'living',
+    brand: '디즈니',
+    notes: [
+      '식기세척기·전자레인지 모두 사용 가능',
+    ],
+    tags: ['디즈니', '머그컵', '블랙'],
   },
   {
     id: 'reusable-cup',
