@@ -377,6 +377,50 @@ export const products: Product[] = [
     ],
     tags: ['패브릭 포스터', '포스터', '패브릭', '리빙'],
   },
+  {
+    id: 'pixar-balloon-dug',
+    name: '픽사 풍선 더그',
+    barcode: '8809923816567',
+    group: 'living',
+    brand: '디즈니/픽사',
+    notes: [
+      '공기 주입 빨대 누락은 불량 처리 필요',
+    ],
+    tags: ['픽사', '풍선', '더그'],
+  },
+  {
+    id: 'pixar-balloon-lotso',
+    name: '픽사 풍선 랏소',
+    barcode: '8809923816536',
+    group: 'living',
+    brand: '디즈니/픽사',
+    notes: [
+      '공기 주입 빨대 누락은 불량 처리 필요',
+    ],
+    tags: ['픽사', '풍선', '랏소'],
+  },
+  {
+    id: 'pixar-balloon-sulley',
+    name: '픽사 풍선 설리반',
+    barcode: '8809923816543',
+    group: 'living',
+    brand: '디즈니/픽사',
+    notes: [
+      '공기 주입 빨대 누락은 불량 처리 필요',
+    ],
+    tags: ['픽사', '풍선', '설리반'],
+  },
+  {
+    id: 'pixar-balloon-mike',
+    name: '픽사 풍선 마이크',
+    barcode: '8809923816550',
+    group: 'living',
+    brand: '디즈니/픽사',
+    notes: [
+      '공기 주입 빨대 누락은 불량 처리 필요',
+    ],
+    tags: ['픽사', '풍선', '마이크'],
+  },
   // DIY 제품
   {
     id: 'diy-figure-box',
