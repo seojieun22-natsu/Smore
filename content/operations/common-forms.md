@@ -13,5 +13,3 @@ updatedAt: "2026-04-07"
 ## 📄 품절 상품 및 비품 발주서
 
 - [품절 상품 및 비품 발주서 - 시트2.pdf](https://jdbrands-my.sharepoint.com/:b:/g/personal/jieun_seo_ideaplab_com/IQBYUFBjJ7EnS77rHTjQBcCtAUyJwNw5QtaRp-GsiKK0o5o?e=KeMegF)
-
-> 링크가 열리지 않으면 나츠에게 최신 공유 링크를 다시 확인해주세요.
