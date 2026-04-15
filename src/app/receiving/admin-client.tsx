@@ -46,7 +46,7 @@ export default function AdminClient() {
 
     if (!supabase) {
       setLoading(false);
-      setError('Supabase 환경 변수가 없어. Vercel 환경변수부터 확인해줘.');
+      setError('Supabase 환경 변수가 없습니다. Vercel 환경변수를 먼저 확인해 주세요.');
       return;
     }
 
@@ -79,7 +79,7 @@ export default function AdminClient() {
         <div>
           <p className="text-sm font-medium text-orange-500">SMORE 테스트 도구</p>
           <h1 className="text-3xl font-bold text-gray-900">입고 관리자 조회</h1>
-          <p className="mt-2 text-sm text-gray-500">매장별, 날짜별 입고 내역을 조회하고 CSV로 내려받아.</p>
+          <p className="mt-2 text-sm text-gray-500">매장별, 날짜별 입고 내역을 조회하고 CSV로 내려받을 수 있습니다.</p>
         </div>
         <a href="/receiving" className="rounded-xl border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50">
           입고 등록으로 돌아가기
@@ -142,7 +142,7 @@ export default function AdminClient() {
                   ))
                 ) : (
                   <tr>
-                    <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={6}>조건에 맞는 내역이 없어.</td>
+                    <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={6}>조건에 맞는 내역이 없습니다.</td>
                   </tr>
                 )}
               </tbody>

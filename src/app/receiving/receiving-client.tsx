@@ -30,7 +30,7 @@ export default function ReceivingClient() {
     const supabase = getSupabaseClient();
 
     if (!supabase) {
-      setStatus({ type: 'error', message: 'Supabase 환경 변수가 없어. Vercel 환경변수부터 확인해줘.' });
+      setStatus({ type: 'error', message: 'Supabase 환경 변수가 없습니다. Vercel 환경변수를 먼저 확인해 주세요.' });
       return;
     }
 
@@ -56,7 +56,7 @@ export default function ReceivingClient() {
 
     if (!supabase) {
       setProduct(null);
-      setLookupMessage('Supabase 환경 변수가 없어. Vercel 환경변수부터 확인해줘.');
+      setLookupMessage('Supabase 환경 변수가 없습니다. Vercel 환경변수를 먼저 확인해 주세요.');
       return;
     }
 
@@ -83,7 +83,7 @@ export default function ReceivingClient() {
 
     if (!data) {
       setProduct(null);
-      setLookupMessage('상품을 찾지 못했어. 바코드를 다시 확인해줘.');
+      setLookupMessage('상품을 찾지 못했습니다. 바코드를 다시 확인해 주세요.');
       return;
     }
 
@@ -95,14 +95,14 @@ export default function ReceivingClient() {
     event.preventDefault();
 
     if (!canSave || !product) {
-      setStatus({ type: 'error', message: '상품 조회 후 수량을 확인해줘.' });
+      setStatus({ type: 'error', message: '상품 조회 후 수량을 확인해 주세요.' });
       return;
     }
 
     const supabase = getSupabaseClient();
 
     if (!supabase) {
-      setStatus({ type: 'error', message: 'Supabase 환경 변수가 없어. Vercel 환경변수부터 확인해줘.' });
+      setStatus({ type: 'error', message: 'Supabase 환경 변수가 없습니다. Vercel 환경변수를 먼저 확인해 주세요.' });
       return;
     }
 
@@ -123,7 +123,7 @@ export default function ReceivingClient() {
       return;
     }
 
-    setStatus({ type: 'success', message: '입고 항목 저장 완료.' });
+    setStatus({ type: 'success', message: '입고 항목이 저장되었습니다.' });
     setBarcode('');
     setQuantity(1);
     setProduct(null);
@@ -141,17 +141,17 @@ export default function ReceivingClient() {
         <div>
           <p className="text-sm font-medium text-orange-500">SMORE 테스트 도구</p>
           <h1 className="text-3xl font-bold text-gray-900">매장 입고 등록</h1>
-          <p className="mt-2 text-sm text-gray-500">바코드 조회, 수량 입력, 오늘 등록 내역 확인까지 한 번에.</p>
+          <p className="mt-2 text-sm text-gray-500">바코드 조회, 수량 입력, 오늘 등록 내역 확인까지 한 번에 진행할 수 있습니다.</p>
         </div>
         <a href="/receiving/admin" className="rounded-xl border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50">
-          관리자 조회 열기
+          관리자 조회 보기
         </a>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-gray-900">입고 등록</h2>
-          <p className="mt-2 text-sm text-gray-500">태블릿에서 바코드 스캔 후 수량만 입력하면 바로 저장돼.</p>
+          <p className="mt-2 text-sm text-gray-500">태블릿에서 바코드를 스캔한 뒤 수량만 입력하면 바로 저장됩니다.</p>
 
           <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
             <div>
@@ -161,7 +161,7 @@ export default function ReceivingClient() {
                   id="barcode"
                   inputMode="numeric"
                   autoFocus
-                  placeholder="스캔하거나 입력"
+                  placeholder="스캔하거나 입력해 주세요"
                   value={barcode}
                   onChange={(event) => {
                     setBarcode(event.target.value);
@@ -186,7 +186,7 @@ export default function ReceivingClient() {
                   {product.sku ? <p className="text-sm text-gray-500">SKU: {product.sku}</p> : null}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">조회된 상품이 아직 없어.</p>
+                <p className="text-sm text-gray-400">조회된 상품이 아직 없습니다.</p>
               )}
               {lookupMessage ? <p className="mt-3 text-sm font-medium text-red-500">{lookupMessage}</p> : null}
             </div>
@@ -227,7 +227,7 @@ export default function ReceivingClient() {
 
             <div className="flex flex-wrap gap-3">
               <button className="min-h-14 rounded-2xl bg-orange-500 px-6 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300" type="submit" disabled={!canSave || saving}>
-                {saving ? '저장 중...' : '입고 저장'}
+                {saving ? '저장 중...' : '입고 수량 저장'}
               </button>
               <button
                 className="min-h-14 rounded-2xl border border-orange-200 bg-white px-6 text-sm font-semibold text-gray-700 transition hover:bg-orange-50"
@@ -275,7 +275,7 @@ export default function ReceivingClient() {
                     ))
                   ) : (
                     <tr>
-                      <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={4}>오늘 등록된 항목이 아직 없어.</td>
+                      <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={4}>오늘 등록된 항목이 아직 없습니다.</td>
                     </tr>
                   )}
                 </tbody>
