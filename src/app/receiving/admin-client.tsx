@@ -38,6 +38,11 @@ export default function AdminClient() {
   const [date, setDate] = useState(todayDate());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingQuantity, setEditingQuantity] = useState(1);
+  const [editingStore, setEditingStore] = useState('삼청점');
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function loadItems() {
     const supabase = getSupabaseClient();
@@ -65,6 +70,67 @@ export default function AdminClient() {
     }
 
     setItems((data ?? []) as ReceiptItem[]);
+  }
+
+  function startEdit(item: ReceiptItem) {
+    setEditingId(item.id);
+    setEditingQuantity(item.quantity);
+    setEditingStore(item.store);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditingQuantity(1);
+    setEditingStore('삼청점');
+  }
+
+  async function saveEdit(item: ReceiptItem) {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setError('Supabase 환경 변수가 없습니다. Vercel 환경변수를 먼저 확인해 주세요.');
+      return;
+    }
+
+    setSavingId(item.id);
+    const { error: updateError } = await supabase
+      .from('receipt_items')
+      .update({ quantity: editingQuantity, store: editingStore })
+      .eq('id', item.id);
+    setSavingId(null);
+
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+
+    cancelEdit();
+    await loadItems();
+  }
+
+  async function deleteItem(itemId: string) {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setError('Supabase 환경 변수가 없습니다. Vercel 환경변수를 먼저 확인해 주세요.');
+      return;
+    }
+
+    const confirmed = window.confirm('이 입고 항목을 삭제하시겠습니까?');
+    if (!confirmed) return;
+
+    setDeletingId(itemId);
+    const { error: deleteError } = await supabase.from('receipt_items').delete().eq('id', itemId);
+    setDeletingId(null);
+
+    if (deleteError) {
+      setError(deleteError.message);
+      return;
+    }
+
+    if (editingId === itemId) {
+      cancelEdit();
+    }
+
+    await loadItems();
   }
 
   useEffect(() => {
@@ -126,23 +192,64 @@ export default function AdminClient() {
                   <th className="px-4 py-3 font-semibold">바코드</th>
                   <th className="px-4 py-3 font-semibold">상품명</th>
                   <th className="px-4 py-3 font-semibold">수량</th>
+                  <th className="px-4 py-3 font-semibold">작업</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-orange-50 bg-white">
                 {items.length ? (
-                  items.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-4 py-3">{new Date(item.created_at).toLocaleString('ko-KR')}</td>
-                      <td className="px-4 py-3">{item.received_date}</td>
-                      <td className="px-4 py-3">{item.store}</td>
-                      <td className="px-4 py-3">{item.barcode}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{item.product_name}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-700">{item.quantity}</td>
-                    </tr>
-                  ))
+                  items.map((item) => {
+                    const isEditing = editingId === item.id;
+                    return (
+                      <tr key={item.id}>
+                        <td className="px-4 py-3">{new Date(item.created_at).toLocaleString('ko-KR')}</td>
+                        <td className="px-4 py-3">{item.received_date}</td>
+                        <td className="px-4 py-3">
+                          {isEditing ? (
+                            <select value={editingStore} onChange={(event) => setEditingStore(event.target.value)} className="min-h-10 rounded-xl border border-orange-100 bg-orange-50/40 px-3 text-sm outline-none transition focus:border-orange-300 focus:bg-white">
+                              {STORE_OPTIONS.filter((option) => option !== '전체').map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            item.store
+                          )}
+                        </td>
+                        <td className="px-4 py-3">{item.barcode}</td>
+                        <td className="px-4 py-3 font-medium text-gray-900">{item.product_name}</td>
+                        <td className="px-4 py-3 font-semibold text-gray-700">
+                          {isEditing ? (
+                            <input type="number" min={1} value={editingQuantity} onChange={(event) => setEditingQuantity(Number(event.target.value) || 1)} className="min-h-10 w-24 rounded-xl border border-orange-100 bg-orange-50/40 px-3 text-sm outline-none transition focus:border-orange-300 focus:bg-white" />
+                          ) : (
+                            item.quantity
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-2">
+                            {isEditing ? (
+                              <>
+                                <button className="rounded-lg border border-orange-200 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={() => saveEdit(item)} disabled={savingId === item.id}>
+                                  {savingId === item.id ? '저장 중...' : '저장'}
+                                </button>
+                                <button className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-50" type="button" onClick={cancelEdit}>
+                                  취소
+                                </button>
+                              </>
+                            ) : (
+                              <button className="rounded-lg border border-orange-200 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-50" type="button" onClick={() => startEdit(item)}>
+                                수정
+                              </button>
+                            )}
+                            <button className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={() => deleteItem(item.id)} disabled={deletingId === item.id}>
+                              {deletingId === item.id ? '삭제 중...' : '삭제'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={6}>조건에 맞는 내역이 없습니다.</td>
+                    <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={7}>조건에 맞는 내역이 없습니다.</td>
                   </tr>
                 )}
               </tbody>

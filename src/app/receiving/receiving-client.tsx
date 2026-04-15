@@ -23,6 +23,8 @@ export default function ReceivingClient() {
   const [loadingLookup, setLoadingLookup] = useState(false);
   const [saving, setSaving] = useState(false);
   const [todayItems, setTodayItems] = useState<ReceiptItem[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const canSave = useMemo(() => Boolean(barcode.trim() && quantity > 0 && product), [barcode, quantity, product]);
 
@@ -46,6 +48,16 @@ export default function ReceivingClient() {
     }
 
     setTodayItems((data ?? []) as ReceiptItem[]);
+  }
+
+  function resetForm() {
+    setBarcode('');
+    setQuantity(1);
+    setStore(STORE_OPTIONS[0]);
+    setProduct(null);
+    setLookupMessage('');
+    setEditingId(null);
+    setStatus({ type: 'idle', message: '' });
   }
 
   async function lookupProduct(value: string) {
@@ -115,19 +127,60 @@ export default function ReceivingClient() {
       received_date: todayDate(),
     };
 
-    const { error } = await supabase.from('receipt_items').insert(payload);
+    const result = editingId
+      ? await supabase.from('receipt_items').update(payload).eq('id', editingId)
+      : await supabase.from('receipt_items').insert(payload);
+
     setSaving(false);
+
+    if (result.error) {
+      setStatus({ type: 'error', message: result.error.message });
+      return;
+    }
+
+    setStatus({
+      type: 'success',
+      message: editingId ? '입고 항목이 수정되었습니다.' : '입고 항목이 저장되었습니다.',
+    });
+    resetForm();
+    await loadTodayItems();
+  }
+
+  function handleEdit(item: ReceiptItem) {
+    setEditingId(item.id);
+    setBarcode(item.barcode);
+    setQuantity(item.quantity);
+    setStore(item.store);
+    setProduct({ barcode: item.barcode, name: item.product_name, sku: null });
+    setLookupMessage('');
+    setStatus({ type: 'idle', message: '' });
+  }
+
+  async function handleDelete(itemId: string) {
+    const supabase = getSupabaseClient();
+
+    if (!supabase) {
+      setStatus({ type: 'error', message: 'Supabase 환경 변수가 없습니다. Vercel 환경변수를 먼저 확인해 주세요.' });
+      return;
+    }
+
+    const confirmed = window.confirm('이 입고 항목을 삭제하시겠습니까?');
+    if (!confirmed) return;
+
+    setDeletingId(itemId);
+    const { error } = await supabase.from('receipt_items').delete().eq('id', itemId);
+    setDeletingId(null);
 
     if (error) {
       setStatus({ type: 'error', message: error.message });
       return;
     }
 
-    setStatus({ type: 'success', message: '입고 항목이 저장되었습니다.' });
-    setBarcode('');
-    setQuantity(1);
-    setProduct(null);
-    setLookupMessage('');
+    if (editingId === itemId) {
+      resetForm();
+    }
+
+    setStatus({ type: 'success', message: '입고 항목이 삭제되었습니다.' });
     await loadTodayItems();
   }
 
@@ -150,8 +203,15 @@ export default function ReceivingClient() {
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-900">입고 등록</h2>
-          <p className="mt-2 text-sm text-gray-500">태블릿에서 바코드를 스캔한 뒤 수량만 입력하면 바로 저장됩니다.</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">입고 등록</h2>
+              <p className="mt-2 text-sm text-gray-500">태블릿에서 바코드를 스캔한 뒤 수량만 입력하면 바로 저장됩니다.</p>
+            </div>
+            {editingId ? (
+              <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">수정 모드</span>
+            ) : null}
+          </div>
 
           <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
             <div>
@@ -227,20 +287,10 @@ export default function ReceivingClient() {
 
             <div className="flex flex-wrap gap-3">
               <button className="min-h-14 rounded-2xl bg-orange-500 px-6 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300" type="submit" disabled={!canSave || saving}>
-                {saving ? '저장 중...' : '입고 수량 저장'}
+                {saving ? '저장 중...' : editingId ? '입고 항목 수정' : '입고 수량 저장'}
               </button>
-              <button
-                className="min-h-14 rounded-2xl border border-orange-200 bg-white px-6 text-sm font-semibold text-gray-700 transition hover:bg-orange-50"
-                type="button"
-                onClick={() => {
-                  setBarcode('');
-                  setQuantity(1);
-                  setProduct(null);
-                  setLookupMessage('');
-                  setStatus({ type: 'idle', message: '' });
-                }}
-              >
-                초기화
+              <button className="min-h-14 rounded-2xl border border-orange-200 bg-white px-6 text-sm font-semibold text-gray-700 transition hover:bg-orange-50" type="button" onClick={resetForm}>
+                {editingId ? '수정 취소' : '초기화'}
               </button>
             </div>
           </form>
@@ -258,6 +308,7 @@ export default function ReceivingClient() {
                     <th className="px-4 py-3 font-semibold">매장</th>
                     <th className="px-4 py-3 font-semibold">상품</th>
                     <th className="px-4 py-3 font-semibold">수량</th>
+                    <th className="px-4 py-3 font-semibold">작업</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-orange-50 bg-white">
@@ -271,11 +322,21 @@ export default function ReceivingClient() {
                           <span className="text-xs text-gray-400">{item.barcode}</span>
                         </td>
                         <td className="px-4 py-3 font-semibold text-gray-700">{item.quantity}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-2">
+                            <button className="rounded-lg border border-orange-200 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-50" type="button" onClick={() => handleEdit(item)}>
+                              수정
+                            </button>
+                            <button className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={() => handleDelete(item.id)} disabled={deletingId === item.id}>
+                              {deletingId === item.id ? '삭제 중...' : '삭제'}
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={4}>오늘 등록된 항목이 아직 없습니다.</td>
+                      <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={5}>오늘 등록된 항목이 아직 없습니다.</td>
                     </tr>
                   )}
                 </tbody>
