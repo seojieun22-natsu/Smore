@@ -3,9 +3,10 @@
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { getSupabaseClient } from '@/lib/supabase';
-import type { ReceiptItem } from '@/lib/receiving-types';
+import type { ProductUploadLog, ReceiptItem } from '@/lib/receiving-types';
 
 const STORE_OPTIONS = ['전체', '삼청점', '행궁점', '팝업'];
+const PRODUCT_TEMPLATE_HEADERS = ['barcode', 'name', 'sku'];
 
 type ProductUploadRow = {
   barcode: string;
@@ -39,6 +40,16 @@ function downloadCsv(rows: ReceiptItem[]) {
   URL.revokeObjectURL(url);
 }
 
+function downloadProductTemplate() {
+  const worksheet = XLSX.utils.aoa_to_sheet([
+    PRODUCT_TEMPLATE_HEADERS,
+    ['8800323770060', '주토피아 토이카메라_투게더', 'SKU-001'],
+  ]);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'products');
+  XLSX.writeFile(workbook, 'smore-product-upload-template.xlsx');
+}
+
 function normalizeCell(value: unknown) {
   if (value == null) return '';
   return String(value).trim();
@@ -68,6 +79,7 @@ function parseProductRows(sheetRows: Record<string, unknown>[]) {
 
 export default function AdminClient() {
   const [items, setItems] = useState<ReceiptItem[]>([]);
+  const [uploadLogs, setUploadLogs] = useState<ProductUploadLog[]>([]);
   const [store, setStore] = useState('전체');
   const [date, setDate] = useState(todayDate());
   const [loading, setLoading] = useState(false);
@@ -106,6 +118,27 @@ export default function AdminClient() {
     }
 
     setItems((data ?? []) as ReceiptItem[]);
+  }
+
+  async function loadUploadLogs() {
+    const supabase = getSupabaseClient();
+
+    if (!supabase) {
+      return;
+    }
+
+    const { data, error: logError } = await supabase
+      .from('product_upload_logs')
+      .select('id, file_name, uploaded_count, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (logError) {
+      console.error(logError);
+      return;
+    }
+
+    setUploadLogs((data ?? []) as ProductUploadLog[]);
   }
 
   function startEdit(item: ReceiptItem) {
@@ -212,6 +245,16 @@ export default function AdminClient() {
         return;
       }
 
+      const { error: logInsertError } = await supabase.from('product_upload_logs').insert({
+        file_name: file.name,
+        uploaded_count: products.length,
+      });
+
+      if (logInsertError) {
+        console.error(logInsertError);
+      }
+
+      await loadUploadLogs();
       setProductUploadMessage(`${products.length}개 상품을 업로드했습니다. 같은 바코드는 최신 값으로 업데이트했습니다.`);
     } catch (uploadError) {
       console.error(uploadError);
@@ -223,6 +266,7 @@ export default function AdminClient() {
 
   useEffect(() => {
     loadItems();
+    loadUploadLogs();
   }, []);
 
   const totalQuantity = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
@@ -246,10 +290,15 @@ export default function AdminClient() {
             <h2 className="text-xl font-semibold text-gray-900">상품 리스트 업로드</h2>
             <p className="mt-2 text-sm text-gray-500">엑셀 또는 CSV 파일로 상품 마스터를 한 번에 등록할 수 있습니다. 중복 바코드는 최신 값으로 업데이트됩니다.</p>
           </div>
-          <label className="inline-flex cursor-pointer items-center rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-100">
-            <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleProductUpload} disabled={uploadingProducts} />
-            {uploadingProducts ? '업로드 중...' : '엑셀/CSV 파일 업로드'}
-          </label>
+          <div className="flex flex-wrap gap-3">
+            <button type="button" onClick={downloadProductTemplate} className="inline-flex items-center rounded-2xl border border-orange-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-orange-50">
+              샘플 양식 다운로드
+            </button>
+            <label className="inline-flex cursor-pointer items-center rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-100">
+              <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleProductUpload} disabled={uploadingProducts} />
+              {uploadingProducts ? '업로드 중...' : '엑셀/CSV 파일 업로드'}
+            </label>
+          </div>
         </div>
         <div className="mt-4 rounded-2xl border border-dashed border-orange-200 bg-orange-50/30 p-4 text-sm text-gray-600">
           <p className="font-semibold text-gray-800">권장 컬럼명</p>
@@ -259,6 +308,26 @@ export default function AdminClient() {
         </div>
         {productUploadMessage ? <p className="mt-4 text-sm font-medium text-emerald-600">{productUploadMessage}</p> : null}
         {error ? <p className="mt-4 text-sm font-medium text-red-500">{error}</p> : null}
+
+        <div className="mt-5 rounded-2xl border border-orange-100 bg-white p-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-gray-800">최근 업로드 기록</p>
+            <span className="text-xs text-gray-400">최대 10건</span>
+          </div>
+          <div className="mt-3 space-y-2">
+            {uploadLogs.length ? (
+              uploadLogs.map((log) => (
+                <div key={log.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-orange-50/50 px-3 py-2 text-sm text-gray-700">
+                  <span className="font-medium text-gray-900">{log.file_name}</span>
+                  <span>{log.uploaded_count}개 업로드</span>
+                  <span className="text-xs text-gray-500">{new Date(log.created_at).toLocaleString('ko-KR')}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-400">아직 업로드 기록이 없습니다.</p>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">

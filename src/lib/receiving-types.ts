@@ -13,3 +13,10 @@ export type ReceiptItem = {
   received_date: string;
   created_at: string;
 };
+
+export type ProductUploadLog = {
+  id: string;
+  file_name: string;
+  uploaded_count: number;
+  created_at: string;
+};
