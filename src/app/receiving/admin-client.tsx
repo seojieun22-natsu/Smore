@@ -3,7 +3,7 @@
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { getSupabaseClient } from '@/lib/supabase';
-import type { Product, ProductUploadLog, ReceiptItem } from '@/lib/receiving-types';
+import type { ProductUploadLog, ReceiptItem } from '@/lib/receiving-types';
 
 const STORE_OPTIONS = ['전체', '삼청점', '행궁점', '팝업'];
 const PRODUCT_TEMPLATE_HEADERS = ['barcode', 'name', 'sku'];
@@ -79,13 +79,11 @@ function parseProductRows(sheetRows: Record<string, unknown>[]) {
 
 export default function AdminClient() {
   const [items, setItems] = useState<ReceiptItem[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedBarcodes, setSelectedBarcodes] = useState<string[]>([]);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [uploadLogs, setUploadLogs] = useState<ProductUploadLog[]>([]);
   const [store, setStore] = useState('전체');
   const [date, setDate] = useState(todayDate());
   const [loading, setLoading] = useState(false);
-  const [loadingProducts, setLoadingProducts] = useState(false);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingQuantity, setEditingQuantity] = useState(1);
@@ -94,7 +92,7 @@ export default function AdminClient() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploadingProducts, setUploadingProducts] = useState(false);
   const [productUploadMessage, setProductUploadMessage] = useState('');
-  const [deletingProducts, setDeletingProducts] = useState(false);
+  const [deletingItems, setDeletingItems] = useState(false);
 
   async function loadItems() {
     const supabase = getSupabaseClient();
@@ -122,32 +120,7 @@ export default function AdminClient() {
     }
 
     setItems((data ?? []) as ReceiptItem[]);
-  }
-
-  async function loadProducts() {
-    const supabase = getSupabaseClient();
-    setLoadingProducts(true);
-
-    if (!supabase) {
-      setLoadingProducts(false);
-      return;
-    }
-
-    const { data, error: productError } = await supabase
-      .from('products')
-      .select('barcode, name, sku')
-      .order('name', { ascending: true })
-      .limit(300);
-
-    setLoadingProducts(false);
-
-    if (productError) {
-      console.error(productError);
-      return;
-    }
-
-    setProducts((data ?? []) as Product[]);
-    setSelectedBarcodes([]);
+    setSelectedItemIds([]);
   }
 
   async function loadUploadLogs() {
@@ -183,14 +156,14 @@ export default function AdminClient() {
     setEditingStore('삼청점');
   }
 
-  function toggleProductSelection(barcode: string) {
-    setSelectedBarcodes((current) =>
-      current.includes(barcode) ? current.filter((value) => value !== barcode) : [...current, barcode],
+  function toggleItemSelection(itemId: string) {
+    setSelectedItemIds((current) =>
+      current.includes(itemId) ? current.filter((value) => value !== itemId) : [...current, itemId],
     );
   }
 
-  function toggleAllProducts() {
-    setSelectedBarcodes((current) => (current.length === products.length ? [] : products.map((product) => product.barcode)));
+  function toggleAllItems() {
+    setSelectedItemIds((current) => (current.length === items.length ? [] : items.map((item) => item.id)));
   }
 
   async function saveEdit(item: ReceiptItem) {
@@ -242,9 +215,9 @@ export default function AdminClient() {
     await loadItems();
   }
 
-  async function deleteSelectedProducts() {
-    if (!selectedBarcodes.length) {
-      setProductUploadMessage('삭제할 상품을 먼저 선택해 주세요.');
+  async function deleteSelectedItems() {
+    if (!selectedItemIds.length) {
+      setProductUploadMessage('삭제할 입고 내역을 먼저 선택해 주세요.');
       return;
     }
 
@@ -254,23 +227,23 @@ export default function AdminClient() {
       return;
     }
 
-    const confirmed = window.confirm(`선택한 상품 ${selectedBarcodes.length}개를 삭제하시겠습니까?`);
+    const confirmed = window.confirm(`선택한 입고 내역 ${selectedItemIds.length}건을 삭제하시겠습니까?`);
     if (!confirmed) return;
 
-    setDeletingProducts(true);
+    setDeletingItems(true);
     setProductUploadMessage('');
     setError('');
 
-    const { error: deleteError } = await supabase.from('products').delete().in('barcode', selectedBarcodes);
-    setDeletingProducts(false);
+    const { error: deleteError } = await supabase.from('receipt_items').delete().in('id', selectedItemIds);
+    setDeletingItems(false);
 
     if (deleteError) {
       setError(deleteError.message);
       return;
     }
 
-    setProductUploadMessage(`${selectedBarcodes.length}개 상품을 삭제했습니다.`);
-    await loadProducts();
+    setProductUploadMessage(`${selectedItemIds.length}건의 입고 내역을 삭제했습니다.`);
+    await loadItems();
   }
 
   async function handleProductUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -326,7 +299,6 @@ export default function AdminClient() {
       }
 
       await loadUploadLogs();
-      await loadProducts();
       setProductUploadMessage(`${productsToUpload.length}개 상품을 업로드했습니다. 같은 바코드는 최신 값으로 업데이트했습니다.`);
     } catch (uploadError) {
       console.error(uploadError);
@@ -338,12 +310,11 @@ export default function AdminClient() {
 
   useEffect(() => {
     loadItems();
-    loadProducts();
     loadUploadLogs();
   }, []);
 
   const totalQuantity = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
-  const allProductsSelected = products.length > 0 && selectedBarcodes.length === products.length;
+  const allItemsSelected = items.length > 0 && selectedItemIds.length === items.length;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
@@ -404,58 +375,6 @@ export default function AdminClient() {
         </div>
       </section>
 
-      <section className="mb-6 rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">상품 리스트 관리</h2>
-            <p className="mt-2 text-sm text-gray-500">관리자 모드에서만 상품을 선택해서 일괄 삭제할 수 있습니다.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <button type="button" onClick={loadProducts} className="rounded-2xl border border-orange-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-orange-50" disabled={loadingProducts}>
-              {loadingProducts ? '불러오는 중...' : '상품 목록 새로고침'}
-            </button>
-            <button type="button" onClick={deleteSelectedProducts} className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50" disabled={!selectedBarcodes.length || deletingProducts}>
-              {deletingProducts ? '삭제 중...' : `선택 상품 삭제${selectedBarcodes.length ? ` (${selectedBarcodes.length})` : ''}`}
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-4 overflow-hidden rounded-2xl border border-orange-100">
-          <div className="max-h-[420px] overflow-auto">
-            <table className="min-w-full divide-y divide-orange-100 text-sm">
-              <thead className="bg-orange-50 text-left text-gray-600">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">
-                    <input type="checkbox" checked={allProductsSelected} onChange={toggleAllProducts} aria-label="전체 선택" />
-                  </th>
-                  <th className="px-4 py-3 font-semibold">바코드</th>
-                  <th className="px-4 py-3 font-semibold">상품명</th>
-                  <th className="px-4 py-3 font-semibold">SKU</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-orange-50 bg-white">
-                {products.length ? (
-                  products.map((product) => (
-                    <tr key={product.barcode}>
-                      <td className="px-4 py-3">
-                        <input type="checkbox" checked={selectedBarcodes.includes(product.barcode)} onChange={() => toggleProductSelection(product.barcode)} aria-label={`${product.name} 선택`} />
-                      </td>
-                      <td className="px-4 py-3">{product.barcode}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
-                      <td className="px-4 py-3 text-gray-500">{product.sku ?? '-'}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={4}>등록된 상품이 없습니다.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
       <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
         <div className="grid gap-5 md:grid-cols-[220px_220px_1fr]">
           <div>
@@ -476,6 +395,9 @@ export default function AdminClient() {
             <button className="min-h-14 rounded-2xl bg-orange-500 px-6 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300" type="button" onClick={loadItems} disabled={loading}>
               {loading ? '불러오는 중...' : '필터 적용'}
             </button>
+            <button className="min-h-14 rounded-2xl border border-red-200 bg-red-50 px-6 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={deleteSelectedItems} disabled={!selectedItemIds.length || deletingItems}>
+              {deletingItems ? '삭제 중...' : `선택 내역 삭제${selectedItemIds.length ? ` (${selectedItemIds.length})` : ''}`}
+            </button>
             <button className="min-h-14 rounded-2xl border border-orange-200 bg-white px-6 text-sm font-semibold text-gray-700 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={() => downloadCsv(items)} disabled={!items.length}>
               CSV 내보내기
             </button>
@@ -490,6 +412,9 @@ export default function AdminClient() {
             <table className="min-w-full divide-y divide-orange-100 text-sm">
               <thead className="bg-orange-50 text-left text-gray-600">
                 <tr>
+                  <th className="px-4 py-3 font-semibold">
+                    <input type="checkbox" checked={allItemsSelected} onChange={toggleAllItems} aria-label="전체 선택" />
+                  </th>
                   <th className="px-4 py-3 font-semibold">등록시각</th>
                   <th className="px-4 py-3 font-semibold">입고일</th>
                   <th className="px-4 py-3 font-semibold">매장</th>
@@ -505,6 +430,9 @@ export default function AdminClient() {
                     const isEditing = editingId === item.id;
                     return (
                       <tr key={item.id}>
+                        <td className="px-4 py-3">
+                          <input type="checkbox" checked={selectedItemIds.includes(item.id)} onChange={() => toggleItemSelection(item.id)} aria-label={`${item.product_name} 선택`} />
+                        </td>
                         <td className="px-4 py-3">{new Date(item.created_at).toLocaleString('ko-KR')}</td>
                         <td className="px-4 py-3">{item.received_date}</td>
                         <td className="px-4 py-3">
@@ -553,7 +481,7 @@ export default function AdminClient() {
                   })
                 ) : (
                   <tr>
-                    <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={7}>조건에 맞는 내역이 없습니다.</td>
+                    <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={8}>조건에 맞는 내역이 없습니다.</td>
                   </tr>
                 )}
               </tbody>
