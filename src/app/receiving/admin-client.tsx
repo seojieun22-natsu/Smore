@@ -1,8 +1,8 @@
 'use client';
 
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { getSupabaseClient } from '@/lib/supabase';
+import { adminPassword, getSupabaseClient } from '@/lib/supabase';
 import type { ProductUploadLog, ReceiptItem } from '@/lib/receiving-types';
 
 const STORE_OPTIONS = ['전체', '삼청점', '행궁점', '팝업'];
@@ -19,12 +19,12 @@ function todayDate() {
 }
 
 function downloadCsv(rows: ReceiptItem[]) {
-  const header = ['created_at', 'received_date', 'store', 'barcode', 'product_name', 'quantity'];
+  const header = ['created_at', 'received_date', 'store', 'manager_name', 'barcode', 'product_name', 'quantity'];
   const escape = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
   const csv = [header.join(',')]
     .concat(
       rows.map((row) =>
-        [row.created_at, row.received_date, row.store, row.barcode, row.product_name, row.quantity]
+        [row.created_at, row.received_date, row.store, row.manager_name ?? '', row.barcode, row.product_name, row.quantity]
           .map(escape)
           .join(','),
       ),
@@ -88,11 +88,15 @@ export default function AdminClient() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingQuantity, setEditingQuantity] = useState(1);
   const [editingStore, setEditingStore] = useState('삼청점');
+  const [editingManagerName, setEditingManagerName] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploadingProducts, setUploadingProducts] = useState(false);
   const [productUploadMessage, setProductUploadMessage] = useState('');
   const [deletingItems, setDeletingItems] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
 
   async function loadItems() {
     const supabase = getSupabaseClient();
@@ -148,12 +152,14 @@ export default function AdminClient() {
     setEditingId(item.id);
     setEditingQuantity(item.quantity);
     setEditingStore(item.store);
+    setEditingManagerName(item.manager_name ?? '');
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditingQuantity(1);
     setEditingStore('삼청점');
+    setEditingManagerName('');
   }
 
   function toggleItemSelection(itemId: string) {
@@ -176,7 +182,7 @@ export default function AdminClient() {
     setSavingId(item.id);
     const { error: updateError } = await supabase
       .from('receipt_items')
-      .update({ quantity: editingQuantity, store: editingStore })
+      .update({ quantity: editingQuantity, store: editingStore, manager_name: editingManagerName.trim() })
       .eq('id', item.id);
     setSavingId(null);
 
@@ -308,13 +314,62 @@ export default function AdminClient() {
     }
   }
 
+  function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!adminPassword) {
+      setPasswordError('관리자 비밀번호 환경변수가 아직 설정되지 않았습니다.');
+      return;
+    }
+
+    if (passwordInput === adminPassword) {
+      setIsAuthorized(true);
+      setPasswordError('');
+      return;
+    }
+
+    setPasswordError('비밀번호가 일치하지 않습니다. 다시 확인해 주세요.');
+  }
+
   useEffect(() => {
+    if (!isAuthorized) return;
+
     loadItems();
     loadUploadLogs();
-  }, []);
+  }, [isAuthorized]);
 
   const totalQuantity = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
   const allItemsSelected = items.length > 0 && selectedItemIds.length === items.length;
+
+  if (!isAuthorized) {
+    return (
+      <div className="mx-auto flex min-h-[70vh] max-w-md items-center px-6 py-10">
+        <section className="w-full rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+          <p className="text-sm font-medium text-orange-500">SMORE 관리자 모드</p>
+          <h1 className="mt-2 text-2xl font-bold text-gray-900">비밀번호 입력</h1>
+          <p className="mt-2 text-sm text-gray-500">관리자 화면은 비밀번호를 입력해야 확인할 수 있습니다.</p>
+
+          <form className="mt-6 space-y-4" onSubmit={handlePasswordSubmit}>
+            <div>
+              <label htmlFor="admin-password" className="mb-2 block text-sm font-medium text-gray-700">비밀번호</label>
+              <input
+                id="admin-password"
+                type="password"
+                value={passwordInput}
+                onChange={(event) => setPasswordInput(event.target.value)}
+                className="min-h-14 w-full rounded-2xl border border-orange-100 bg-orange-50/40 px-4 text-base outline-none transition focus:border-orange-300 focus:bg-white"
+                placeholder="관리자 비밀번호를 입력해 주세요"
+              />
+            </div>
+            {passwordError ? <p className="text-sm font-medium text-red-500">{passwordError}</p> : null}
+            <button type="submit" className="min-h-14 w-full rounded-2xl bg-orange-500 px-6 text-sm font-semibold text-white transition hover:bg-orange-600">
+              관리자 모드 열기
+            </button>
+          </form>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
@@ -418,6 +473,7 @@ export default function AdminClient() {
                   <th className="px-4 py-3 font-semibold">등록시각</th>
                   <th className="px-4 py-3 font-semibold">입고일</th>
                   <th className="px-4 py-3 font-semibold">매장</th>
+                  <th className="px-4 py-3 font-semibold">담당자</th>
                   <th className="px-4 py-3 font-semibold">바코드</th>
                   <th className="px-4 py-3 font-semibold">상품명</th>
                   <th className="px-4 py-3 font-semibold">수량</th>
@@ -444,6 +500,13 @@ export default function AdminClient() {
                             </select>
                           ) : (
                             item.store
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {isEditing ? (
+                            <input value={editingManagerName} onChange={(event) => setEditingManagerName(event.target.value)} className="min-h-10 w-28 rounded-xl border border-orange-100 bg-orange-50/40 px-3 text-sm outline-none transition focus:border-orange-300 focus:bg-white" />
+                          ) : (
+                            item.manager_name ?? '-'
                           )}
                         </td>
                         <td className="px-4 py-3">{item.barcode}</td>
@@ -481,7 +544,7 @@ export default function AdminClient() {
                   })
                 ) : (
                   <tr>
-                    <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={8}>조건에 맞는 내역이 없습니다.</td>
+                    <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={9}>조건에 맞는 내역이 없습니다.</td>
                   </tr>
                 )}
               </tbody>

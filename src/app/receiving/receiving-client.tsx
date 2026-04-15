@@ -15,6 +15,7 @@ export default function ReceivingClient() {
   const [barcode, setBarcode] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [store, setStore] = useState(STORE_OPTIONS[0]);
+  const [managerName, setManagerName] = useState('');
   const [product, setProduct] = useState<Product | null>(null);
   const [lookupMessage, setLookupMessage] = useState('');
   const [status, setStatus] = useState<{ type: 'idle' | 'error' | 'success'; message: string }>({
@@ -35,7 +36,7 @@ export default function ReceivingClient() {
   const lastScannedRef = useRef('');
   const scanCooldownRef = useRef<number | null>(null);
 
-  const canSave = useMemo(() => Boolean(barcode.trim() && quantity > 0 && product), [barcode, quantity, product]);
+  const canSave = useMemo(() => Boolean(barcode.trim() && quantity > 0 && product && managerName.trim()), [barcode, quantity, product, managerName]);
 
   async function loadTodayItems() {
     const supabase = getSupabaseClient();
@@ -63,6 +64,7 @@ export default function ReceivingClient() {
     setBarcode('');
     setQuantity(1);
     setStore(STORE_OPTIONS[0]);
+    setManagerName('');
     setProduct(null);
     setLookupMessage('');
     setEditingId(null);
@@ -116,7 +118,7 @@ export default function ReceivingClient() {
     event.preventDefault();
 
     if (!canSave || !product) {
-      setStatus({ type: 'error', message: '상품 조회 후 수량을 확인해 주세요.' });
+      setStatus({ type: 'error', message: '상품 조회와 담당자명을 확인해 주세요.' });
       return;
     }
 
@@ -133,6 +135,7 @@ export default function ReceivingClient() {
       product_name: product.name,
       quantity,
       store,
+      manager_name: managerName.trim(),
       received_date: todayDate(),
     };
 
@@ -160,6 +163,7 @@ export default function ReceivingClient() {
     setBarcode(item.barcode);
     setQuantity(item.quantity);
     setStore(item.store);
+    setManagerName(item.manager_name ?? '');
     setProduct({ barcode: item.barcode, name: item.product_name, sku: null });
     setLookupMessage('');
     setStatus({ type: 'idle', message: '' });
@@ -322,6 +326,17 @@ export default function ReceivingClient() {
 
           <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
             <div>
+              <label htmlFor="manager-name" className="mb-2 block text-sm font-medium text-gray-700">담당자명</label>
+              <input
+                id="manager-name"
+                placeholder="입고 등록 담당자명을 입력해 주세요"
+                value={managerName}
+                onChange={(event) => setManagerName(event.target.value)}
+                className="min-h-14 w-full rounded-2xl border border-orange-100 bg-orange-50/40 px-4 text-base outline-none transition focus:border-orange-300 focus:bg-white"
+              />
+            </div>
+
+            <div>
               <label htmlFor="barcode" className="mb-2 block text-sm font-medium text-gray-700">Barcode</label>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <input
@@ -432,6 +447,7 @@ export default function ReceivingClient() {
                   <tr>
                     <th className="px-4 py-3 font-semibold">시간</th>
                     <th className="px-4 py-3 font-semibold">매장</th>
+                    <th className="px-4 py-3 font-semibold">담당자</th>
                     <th className="px-4 py-3 font-semibold">상품</th>
                     <th className="px-4 py-3 font-semibold">수량</th>
                     <th className="px-4 py-3 font-semibold">작업</th>
@@ -443,6 +459,7 @@ export default function ReceivingClient() {
                       <tr key={item.id}>
                         <td className="px-4 py-3">{new Date(item.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</td>
                         <td className="px-4 py-3">{item.store}</td>
+                        <td className="px-4 py-3">{item.manager_name ?? '-'}</td>
                         <td className="px-4 py-3">
                           <strong className="block text-gray-900">{item.product_name}</strong>
                           <span className="text-xs text-gray-400">{item.barcode}</span>
@@ -462,7 +479,7 @@ export default function ReceivingClient() {
                     ))
                   ) : (
                     <tr>
-                      <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={5}>오늘 등록된 항목이 아직 없습니다.</td>
+                      <td className="px-4 py-10 text-center text-sm text-gray-400" colSpan={6}>오늘 등록된 항목이 아직 없습니다.</td>
                     </tr>
                   )}
                 </tbody>

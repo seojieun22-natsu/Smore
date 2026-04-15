@@ -10,6 +10,7 @@ export type ReceiptItem = {
   product_name: string;
   quantity: number;
   store: string;
+  manager_name?: string | null;
   received_date: string;
   created_at: string;
 };
