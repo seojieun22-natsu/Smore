@@ -191,47 +191,71 @@ export default function ReceivingClient() {
     await loadTodayItems();
   }
 
-  async function startScanner() {
-    if (!videoRef.current) return;
+  function startScanner() {
+    setScanError('');
+    setScannerOpen(true);
+    setScannerReady(false);
+  }
 
-    try {
-      setScanError('');
-      setScannerOpen(true);
-      setScannerReady(false);
+  useEffect(() => {
+    if (!scannerOpen || !videoRef.current) return;
 
-      if (!readerRef.current) {
-        readerRef.current = new BrowserMultiFormatReader() as BrowserCodeReader;
-      }
+    let cancelled = false;
 
-      const reader = readerRef.current;
-      const devices = await BrowserCodeReader.listVideoInputDevices();
-      const backCamera = devices.find((device) => /back|rear|environment/gi.test(device.label)) ?? devices[0];
+    async function bootScanner() {
+      try {
+        if (!readerRef.current) {
+          readerRef.current = new BrowserMultiFormatReader() as BrowserCodeReader;
+        }
 
-      if (!backCamera) {
-        setScanError('사용 가능한 카메라를 찾지 못했습니다.');
-        return;
-      }
+        const reader = readerRef.current;
+        const videoElement = videoRef.current;
+        if (!videoElement) return;
 
-      await reader.decodeFromVideoDevice(backCamera.deviceId, videoRef.current, async (result, error) => {
-        if (result) {
-          const text = result.getText();
-          stopScanner();
-          await lookupProduct(text);
-          setStatus({ type: 'success', message: '바코드를 스캔했습니다. 상품 조회 결과를 확인해 주세요.' });
+        const devices = await BrowserCodeReader.listVideoInputDevices();
+        const backCamera = devices.find((device) => /back|rear|environment/gi.test(device.label)) ?? devices[0];
+
+        if (!backCamera) {
+          if (!cancelled) {
+            setScanError('사용 가능한 카메라를 찾지 못했습니다.');
+          }
           return;
         }
 
-        if (error && error.name !== 'NotFoundException') {
-          setScanError('바코드 스캔 중 오류가 발생했습니다. 다시 시도해 주세요.');
-        }
-      });
+        await reader.decodeFromVideoDevice(backCamera.deviceId, videoElement, async (result, error) => {
+          if (cancelled) return;
 
-      setScannerReady(true);
-    } catch (error) {
-      console.error(error);
-      setScanError('카메라를 열지 못했습니다. 브라우저 권한을 확인해 주세요.');
+          if (result) {
+            const text = result.getText();
+            stopScanner();
+            await lookupProduct(text);
+            setStatus({ type: 'success', message: '바코드를 스캔했습니다. 상품 조회 결과를 확인해 주세요.' });
+            return;
+          }
+
+          if (error && error.name !== 'NotFoundException') {
+            setScanError('바코드 스캔 중 오류가 발생했습니다. 다시 시도해 주세요.');
+          }
+        });
+
+        if (!cancelled) {
+          setScannerReady(true);
+        }
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) {
+          setScanError('카메라를 열지 못했습니다. 브라우저 권한을 확인해 주세요.');
+          setScannerReady(false);
+        }
+      }
     }
-  }
+
+    bootScanner();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [scannerOpen]);
 
   function stopScanner() {
     if (videoRef.current?.srcObject) {
