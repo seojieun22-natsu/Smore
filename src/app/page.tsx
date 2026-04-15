@@ -31,6 +31,25 @@ export default function Home() {
 
         {/* Category Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* 입고 테스트 도구 */}
+          <Link
+            href="/receiving"
+            className="bg-white rounded-2xl shadow-sm border border-orange-50 p-7 hover:shadow-lg hover:border-orange-200 hover:-translate-y-0.5 transition-all duration-200 group"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-2xl group-hover:bg-orange-100 transition-colors">
+                🧾
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-gray-800 group-hover:text-orange-600 transition-colors">
+                  입고 등록 테스트
+                </h3>
+                <p className="text-xs text-orange-400 mb-2">바코드 조회 · 수량 입력 · CSV 다운로드</p>
+                <p className="text-sm text-gray-500 leading-relaxed">매장 태블릿에서 입고 수량을 바로 기록해보는 테스트용 페이지</p>
+              </div>
+            </div>
+          </Link>
+
           {/* 상품 매뉴얼 (별도 페이지) */}
           <Link
             href="/products"
