@@ -1,10 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
 import { getSupabaseClient } from '@/lib/supabase';
 import type { ReceiptItem } from '@/lib/receiving-types';
 
 const STORE_OPTIONS = ['전체', '삼청점', '행궁점', '팝업'];
+
+type ProductUploadRow = {
+  barcode: string;
+  name: string;
+  sku: string | null;
+};
 
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
@@ -32,6 +39,33 @@ function downloadCsv(rows: ReceiptItem[]) {
   URL.revokeObjectURL(url);
 }
 
+function normalizeCell(value: unknown) {
+  if (value == null) return '';
+  return String(value).trim();
+}
+
+function parseProductRows(sheetRows: Record<string, unknown>[]) {
+  const parsed: ProductUploadRow[] = [];
+
+  for (const row of sheetRows) {
+    const barcode = normalizeCell(row.barcode ?? row.Barcode ?? row.BARCODE ?? row['바코드']);
+    const name = normalizeCell(row.name ?? row.Name ?? row.NAME ?? row['상품명'] ?? row['품목명']);
+    const sku = normalizeCell(row.sku ?? row.SKU ?? row['품목코드'] ?? row['상품코드']);
+
+    if (!barcode || !name) {
+      continue;
+    }
+
+    parsed.push({
+      barcode,
+      name,
+      sku: sku || null,
+    });
+  }
+
+  return parsed;
+}
+
 export default function AdminClient() {
   const [items, setItems] = useState<ReceiptItem[]>([]);
   const [store, setStore] = useState('전체');
@@ -43,6 +77,8 @@ export default function AdminClient() {
   const [editingStore, setEditingStore] = useState('삼청점');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploadingProducts, setUploadingProducts] = useState(false);
+  const [productUploadMessage, setProductUploadMessage] = useState('');
 
   async function loadItems() {
     const supabase = getSupabaseClient();
@@ -133,6 +169,58 @@ export default function AdminClient() {
     await loadItems();
   }
 
+  async function handleProductUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    setProductUploadMessage('');
+    setError('');
+
+    if (!file) {
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setError('Supabase 환경 변수가 없습니다. Vercel 환경변수를 먼저 확인해 주세요.');
+      return;
+    }
+
+    try {
+      setUploadingProducts(true);
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+
+      if (!firstSheetName) {
+        setProductUploadMessage('업로드할 시트를 찾지 못했습니다. 파일을 다시 확인해 주세요.');
+        return;
+      }
+
+      const sheet = workbook.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' });
+      const products = parseProductRows(rows);
+
+      if (!products.length) {
+        setProductUploadMessage('업로드 가능한 상품 데이터가 없습니다. 컬럼명은 barcode, name, sku 또는 바코드, 상품명 형식을 사용해 주세요.');
+        return;
+      }
+
+      const { error: uploadError } = await supabase.from('products').upsert(products, { onConflict: 'barcode' });
+
+      if (uploadError) {
+        setError(uploadError.message);
+        return;
+      }
+
+      setProductUploadMessage(`${products.length}개 상품을 업로드했습니다. 같은 바코드는 최신 값으로 업데이트했습니다.`);
+    } catch (uploadError) {
+      console.error(uploadError);
+      setError('파일을 읽는 중 오류가 발생했습니다. 엑셀 또는 CSV 형식을 다시 확인해 주세요.');
+    } finally {
+      setUploadingProducts(false);
+    }
+  }
+
   useEffect(() => {
     loadItems();
   }, []);
@@ -151,6 +239,27 @@ export default function AdminClient() {
           입고 등록으로 돌아가기
         </a>
       </div>
+
+      <section className="mb-6 rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">상품 리스트 업로드</h2>
+            <p className="mt-2 text-sm text-gray-500">엑셀 또는 CSV 파일로 상품 마스터를 한 번에 등록할 수 있습니다. 중복 바코드는 최신 값으로 업데이트됩니다.</p>
+          </div>
+          <label className="inline-flex cursor-pointer items-center rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-100">
+            <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleProductUpload} disabled={uploadingProducts} />
+            {uploadingProducts ? '업로드 중...' : '엑셀/CSV 파일 업로드'}
+          </label>
+        </div>
+        <div className="mt-4 rounded-2xl border border-dashed border-orange-200 bg-orange-50/30 p-4 text-sm text-gray-600">
+          <p className="font-semibold text-gray-800">권장 컬럼명</p>
+          <p className="mt-2">- `barcode` 또는 `바코드`</p>
+          <p>- `name` 또는 `상품명`</p>
+          <p>- `sku` 또는 `품목코드` (선택)</p>
+        </div>
+        {productUploadMessage ? <p className="mt-4 text-sm font-medium text-emerald-600">{productUploadMessage}</p> : null}
+        {error ? <p className="mt-4 text-sm font-medium text-red-500">{error}</p> : null}
+      </section>
 
       <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
         <div className="grid gap-5 md:grid-cols-[220px_220px_1fr]">
