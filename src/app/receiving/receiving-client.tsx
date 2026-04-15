@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { BrowserCodeReader, BrowserMultiFormatReader } from '@zxing/browser';
 import { getSupabaseClient } from '@/lib/supabase';
 import type { Product, ReceiptItem } from '@/lib/receiving-types';
 
@@ -25,6 +26,12 @@ export default function ReceivingClient() {
   const [todayItems, setTodayItems] = useState<ReceiptItem[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerReady, setScannerReady] = useState(false);
+  const [scanError, setScanError] = useState('');
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const readerRef = useRef<BrowserCodeReader | null>(null);
 
   const canSave = useMemo(() => Boolean(barcode.trim() && quantity > 0 && product), [barcode, quantity, product]);
 
@@ -184,8 +191,64 @@ export default function ReceivingClient() {
     await loadTodayItems();
   }
 
+  async function startScanner() {
+    if (!videoRef.current) return;
+
+    try {
+      setScanError('');
+      setScannerOpen(true);
+      setScannerReady(false);
+
+      if (!readerRef.current) {
+        readerRef.current = new BrowserMultiFormatReader() as BrowserCodeReader;
+      }
+
+      const reader = readerRef.current;
+      const devices = await BrowserCodeReader.listVideoInputDevices();
+      const backCamera = devices.find((device) => /back|rear|environment/gi.test(device.label)) ?? devices[0];
+
+      if (!backCamera) {
+        setScanError('사용 가능한 카메라를 찾지 못했습니다.');
+        return;
+      }
+
+      await reader.decodeFromVideoDevice(backCamera.deviceId, videoRef.current, async (result, error) => {
+        if (result) {
+          const text = result.getText();
+          stopScanner();
+          await lookupProduct(text);
+          setStatus({ type: 'success', message: '바코드를 스캔했습니다. 상품 조회 결과를 확인해 주세요.' });
+          return;
+        }
+
+        if (error && error.name !== 'NotFoundException') {
+          setScanError('바코드 스캔 중 오류가 발생했습니다. 다시 시도해 주세요.');
+        }
+      });
+
+      setScannerReady(true);
+    } catch (error) {
+      console.error(error);
+      setScanError('카메라를 열지 못했습니다. 브라우저 권한을 확인해 주세요.');
+    }
+  }
+
+  function stopScanner() {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setScannerOpen(false);
+    setScannerReady(false);
+  }
+
   useEffect(() => {
     loadTodayItems();
+
+    return () => {
+      stopScanner();
+    };
   }, []);
 
   return (
@@ -206,7 +269,7 @@ export default function ReceivingClient() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">입고 등록</h2>
-              <p className="mt-2 text-sm text-gray-500">태블릿에서 바코드를 스캔한 뒤 수량만 입력하면 바로 저장됩니다.</p>
+              <p className="mt-2 text-sm text-gray-500">태블릿 또는 휴대폰에서 바코드를 스캔한 뒤 수량만 입력하면 바로 저장됩니다.</p>
             </div>
             {editingId ? (
               <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">수정 모드</span>
@@ -235,7 +298,26 @@ export default function ReceivingClient() {
                   {loadingLookup ? '조회 중...' : '상품 조회'}
                 </button>
               </div>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <button className="rounded-2xl border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-700 transition hover:bg-orange-50" type="button" onClick={scannerOpen ? stopScanner : startScanner}>
+                  {scannerOpen ? '카메라 스캔 닫기' : '카메라로 바코드 스캔'}
+                </button>
+                <p className="text-xs text-gray-500">휴대폰에서는 카메라 권한 허용 후 바코드를 화면 중앙에 맞춰 주세요.</p>
+              </div>
             </div>
+
+            {scannerOpen ? (
+              <div className="rounded-2xl border border-orange-200 bg-orange-50/40 p-4">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-gray-800">카메라 스캔</p>
+                  <span className="text-xs text-gray-500">{scannerReady ? '스캔 준비 완료' : '카메라 연결 중...'}</span>
+                </div>
+                <div className="overflow-hidden rounded-2xl border border-orange-100 bg-black">
+                  <video ref={videoRef} className="h-[280px] w-full object-cover" muted playsInline />
+                </div>
+                {scanError ? <p className="mt-3 text-sm font-medium text-red-500">{scanError}</p> : null}
+              </div>
+            ) : null}
 
             <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/40 p-4">
               <div className="mb-2 inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-orange-500">상품 정보</div>
