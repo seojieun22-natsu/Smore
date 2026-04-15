@@ -32,6 +32,8 @@ export default function ReceivingClient() {
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const readerRef = useRef<BrowserCodeReader | null>(null);
+  const lastScannedRef = useRef('');
+  const scanCooldownRef = useRef<number | null>(null);
 
   const canSave = useMemo(() => Boolean(barcode.trim() && quantity > 0 && product), [barcode, quantity, product]);
 
@@ -227,9 +229,21 @@ export default function ReceivingClient() {
 
           if (result) {
             const text = result.getText();
-            stopScanner();
+
+            if (lastScannedRef.current === text) {
+              return;
+            }
+
+            lastScannedRef.current = text;
+            if (scanCooldownRef.current) {
+              window.clearTimeout(scanCooldownRef.current);
+            }
+            scanCooldownRef.current = window.setTimeout(() => {
+              lastScannedRef.current = '';
+            }, 1500);
+
             await lookupProduct(text);
-            setStatus({ type: 'success', message: '바코드를 스캔했습니다. 상품 조회 결과를 확인해 주세요.' });
+            setStatus({ type: 'success', message: '바코드를 스캔했습니다. 카메라는 계속 켜져 있습니다.' });
             return;
           }
 
@@ -258,6 +272,12 @@ export default function ReceivingClient() {
   }, [scannerOpen]);
 
   function stopScanner() {
+    if (scanCooldownRef.current) {
+      window.clearTimeout(scanCooldownRef.current);
+      scanCooldownRef.current = null;
+    }
+    lastScannedRef.current = '';
+
     if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach((track) => track.stop());
@@ -326,7 +346,7 @@ export default function ReceivingClient() {
                 <button className="rounded-2xl border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-700 transition hover:bg-orange-50" type="button" onClick={scannerOpen ? stopScanner : startScanner}>
                   {scannerOpen ? '카메라 스캔 닫기' : '카메라로 바코드 스캔'}
                 </button>
-                <p className="text-xs text-gray-500">휴대폰에서는 카메라 권한 허용 후 바코드를 화면 중앙에 맞춰 주세요.</p>
+                <p className="text-xs text-gray-500">휴대폰에서는 카메라 권한 허용 후 바코드를 화면 중앙에 맞춰 주세요. 한 번 열면 연속으로 스캔할 수 있습니다.</p>
               </div>
             </div>
 
@@ -334,7 +354,7 @@ export default function ReceivingClient() {
               <div className="rounded-2xl border border-orange-200 bg-orange-50/40 p-4">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-gray-800">카메라 스캔</p>
-                  <span className="text-xs text-gray-500">{scannerReady ? '스캔 준비 완료' : '카메라 연결 중...'}</span>
+                  <span className="text-xs text-gray-500">{scannerReady ? '연속 스캔 준비 완료' : '카메라 연결 중...'}</span>
                 </div>
                 <div className="overflow-hidden rounded-2xl border border-orange-100 bg-black">
                   <video ref={videoRef} className="h-[280px] w-full object-cover" muted playsInline />
