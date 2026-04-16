@@ -3,9 +3,14 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { adminPassword, getSupabaseClient } from '@/lib/supabase';
-import type { ProductUploadLog, ReceiptItem } from '@/lib/receiving-types';
+import type { AdminUser, ProductUploadLog, ReceiptItem } from '@/lib/receiving-types';
 
 const STORE_OPTIONS = ['전체', '삼청점', '행궁점', '팝업'];
+const ACCOUNT_STORE_OPTIONS = ['삼청점', '행궁점', '팝업'];
+const ROLE_OPTIONS = [
+  { value: 'store_admin', label: '매장 관리자' },
+  { value: 'super_admin', label: '슈퍼 관리자' },
+];
 const PRODUCT_TEMPLATE_HEADERS = ['barcode', 'name', 'sku'];
 
 type ProductUploadRow = {
@@ -81,6 +86,7 @@ export default function AdminClient() {
   const [items, setItems] = useState<ReceiptItem[]>([]);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [uploadLogs, setUploadLogs] = useState<ProductUploadLog[]>([]);
+  const [createdUsers, setCreatedUsers] = useState<AdminUser[]>([]);
   const [store, setStore] = useState('전체');
   const [date, setDate] = useState(todayDate());
   const [loading, setLoading] = useState(false);
@@ -94,6 +100,16 @@ export default function AdminClient() {
   const [uploadingProducts, setUploadingProducts] = useState(false);
   const [productUploadMessage, setProductUploadMessage] = useState('');
   const [deletingItems, setDeletingItems] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [userPassword, setUserPassword] = useState('');
+  const [accountStore, setAccountStore] = useState(ACCOUNT_STORE_OPTIONS[0]);
+  const [role, setRole] = useState(ROLE_OPTIONS[0].value);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [createUserMessage, setCreateUserMessage] = useState<{ type: 'idle' | 'error' | 'success'; message: string }>({
+    type: 'idle',
+    message: '',
+  });
   const [passwordInput, setPasswordInput] = useState('');
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [passwordError, setPasswordError] = useState('');
@@ -314,6 +330,47 @@ export default function AdminClient() {
     }
   }
 
+  async function handleCreateAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setCreateUserMessage({ type: 'idle', message: '' });
+
+    if (!name.trim() || !email.trim() || !userPassword.trim()) {
+      setCreateUserMessage({ type: 'error', message: '이름, 이메일, 비밀번호를 모두 입력해 주세요.' });
+      return;
+    }
+
+    setCreatingUser(true);
+    const response = await fetch('/api/receiving/admin/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password: userPassword,
+        role,
+        store: role === 'super_admin' ? '전체' : accountStore,
+      }),
+    });
+
+    const result = (await response.json()) as { error?: string; user?: AdminUser };
+    setCreatingUser(false);
+
+    if (!response.ok || !result.user) {
+      setCreateUserMessage({ type: 'error', message: result.error ?? '계정 생성 중 오류가 발생했습니다.' });
+      return;
+    }
+
+    setCreatedUsers((prev) => [result.user as AdminUser, ...prev]);
+    setCreateUserMessage({ type: 'success', message: `${result.user.email} 계정을 생성했습니다.` });
+    setName('');
+    setEmail('');
+    setUserPassword('');
+    setAccountStore(ACCOUNT_STORE_OPTIONS[0]);
+    setRole(ROLE_OPTIONS[0].value);
+  }
+
   function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -383,6 +440,110 @@ export default function AdminClient() {
           입고 등록으로 돌아가기
         </a>
       </div>
+
+      <section className="mb-6 rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">관리자 계정 생성</h2>
+            <p className="mt-2 text-sm text-gray-500">매장별 관리자 계정을 이 화면에서 바로 만들 수 있습니다.</p>
+          </div>
+        </div>
+
+        <form className="mt-5 grid gap-4 md:grid-cols-2" onSubmit={handleCreateAccount}>
+          <div>
+            <label htmlFor="account-name" className="mb-2 block text-sm font-medium text-gray-700">이름</label>
+            <input
+              id="account-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className="min-h-14 w-full rounded-2xl border border-orange-100 bg-orange-50/40 px-4 text-base outline-none transition focus:border-orange-300 focus:bg-white"
+              placeholder="예: 삼청점 매니저"
+            />
+          </div>
+          <div>
+            <label htmlFor="account-email" className="mb-2 block text-sm font-medium text-gray-700">이메일</label>
+            <input
+              id="account-email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="min-h-14 w-full rounded-2xl border border-orange-100 bg-orange-50/40 px-4 text-base outline-none transition focus:border-orange-300 focus:bg-white"
+              placeholder="manager@smore.kr"
+            />
+          </div>
+          <div>
+            <label htmlFor="account-password" className="mb-2 block text-sm font-medium text-gray-700">임시 비밀번호</label>
+            <input
+              id="account-password"
+              type="password"
+              value={userPassword}
+              onChange={(event) => setUserPassword(event.target.value)}
+              className="min-h-14 w-full rounded-2xl border border-orange-100 bg-orange-50/40 px-4 text-base outline-none transition focus:border-orange-300 focus:bg-white"
+              placeholder="8자 이상"
+            />
+          </div>
+          <div>
+            <label htmlFor="account-role" className="mb-2 block text-sm font-medium text-gray-700">권한</label>
+            <select
+              id="account-role"
+              value={role}
+              onChange={(event) => setRole(event.target.value)}
+              className="min-h-14 w-full rounded-2xl border border-orange-100 bg-orange-50/40 px-4 text-base outline-none transition focus:border-orange-300 focus:bg-white"
+            >
+              {ROLE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="account-store" className="mb-2 block text-sm font-medium text-gray-700">소속 매장</label>
+            <select
+              id="account-store"
+              value={role === 'super_admin' ? '전체' : accountStore}
+              onChange={(event) => setAccountStore(event.target.value)}
+              disabled={role === 'super_admin'}
+              className="min-h-14 w-full rounded-2xl border border-orange-100 bg-orange-50/40 px-4 text-base outline-none transition focus:border-orange-300 focus:bg-white disabled:opacity-60"
+            >
+              {role === 'super_admin' ? <option value="전체">전체</option> : null}
+              {ACCOUNT_STORE_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-end">
+            <button type="submit" className="min-h-14 w-full rounded-2xl bg-orange-500 px-6 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300" disabled={creatingUser}>
+              {creatingUser ? '계정 생성 중...' : '계정 생성'}
+            </button>
+          </div>
+        </form>
+
+        {createUserMessage.message ? (
+          <p className={`mt-4 text-sm font-medium ${createUserMessage.type === 'error' ? 'text-red-500' : 'text-emerald-600'}`}>
+            {createUserMessage.message}
+          </p>
+        ) : null}
+
+        <div className="mt-5 rounded-2xl border border-orange-100 bg-white p-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-gray-800">이 화면에서 생성한 계정</p>
+            <span className="text-xs text-gray-400">현재 세션 기준</span>
+          </div>
+          <div className="mt-3 space-y-2">
+            {createdUsers.length ? (
+              createdUsers.map((user) => (
+                <div key={user.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-orange-50/50 px-3 py-2 text-sm text-gray-700">
+                  <span className="font-medium text-gray-900">{user.email}</span>
+                  <span>{user.name}</span>
+                  <span>{user.role}</span>
+                  <span>{user.store}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-400">아직 이 화면에서 생성한 계정이 없습니다.</p>
+            )}
+          </div>
+        </div>
+      </section>
 
       <section className="mb-6 rounded-3xl border border-orange-100 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">

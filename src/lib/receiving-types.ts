@@ -21,3 +21,12 @@ export type ProductUploadLog = {
   uploaded_count: number;
   created_at: string;
 };
+
+export type AdminUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  store: string;
+  created_at: string;
+};
